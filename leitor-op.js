@@ -21,7 +21,6 @@ export function lerOP(texto) {
     operacoes: []
   };
 
-  // ---- Funções auxiliares ----
   function pega(regex) {
     const m = texto.match(regex);
     return m ? m[1].trim() : null;
@@ -39,7 +38,6 @@ export function lerOP(texto) {
   const mCliente = texto.match(/Cliente\s*:\s*(.+)/);
   op.cliente = mCliente ? mCliente[1].trim() : null;
 
-  // Descrição do produto: linha logo após a linha "Produto: ..."
   for (let i = 0; i < linhas.length; i++) {
     if (linhas[i].includes("Produto:") && linhas[i].includes("Unid")) {
       op.descricao = (linhas[i + 1] || "").trim();
@@ -47,38 +45,47 @@ export function lerOP(texto) {
     }
   }
 
-  // ---- Matéria-prima ----
+  // ---- Matéria-prima (junta a descrição que quebra em 2 linhas) ----
   for (let i = 0; i < linhas.length; i++) {
     const l = linhas[i];
     const m = l.match(/^(\d{6,})\s+(\S+)\s+([\d.,]+)\s*-\s*([\d.,]+)\s+(.*)/);
     if (m) {
+      let descricao = m[5].trim();
+      // Se a próxima linha for continuação (não é separador nem vazia), junta
+      const prox = (linhas[i + 1] || "").trim();
+      if (prox && !prox.startsWith("---") && !prox.startsWith("|") && !prox.startsWith("*")) {
+        descricao += prox;
+      }
       op.materiaPrima.push({
         codigo: m[1],
         lote: m[2],
         qtdeMP: m[3],
         qtdePeca: m[4],
-        descricao: m[5].trim()
+        descricao: descricao
       });
     }
   }
 
   // ---- Parâmetros de moldagem ----
   for (const l of linhas) {
-    const mParam = l.match(/^\|\s*([A-Z][A-Z\s()]+?)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|/);
-    if (mParam && !l.includes("ESPECIFICADO")) {
+    // Linha normal: | NOME | valor | tolmin | tolmax |
+    const mParam = l.match(/^\|\s*([A-Za-zÇÃÁÉÍÓÚ][A-Za-z0-9\s().%\/]*?)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|/);
+    if (mParam && !l.includes("ESPECIFICADO") && !l.includes("TOL MINIMA")) {
       op.parametrosMoldagem.push({
         parametro: mParam[1].trim(),
         valor: mParam[2],
         tolMin: mParam[3],
         tolMax: mParam[4]
       });
+      continue;
     }
-    const mTempo = l.match(/\|\s*(TEMPO REF[^|]*)\|LADO1:\s*([\d.,]+)\s*\|LADO2:\s*([\d.,]+)\s*\|QTDE\s*:\s*([\d.,]+)/);
+    // Linha especial do TEMPO REF (formato diferente)
+    const mTempo = l.match(/\|\s*(TEMPO REF[^|]*)\|\s*LADO1:\s*([\d.,]+)\s*\|\s*LADO2:\s*([\d.,]+)\s*\|\s*QTDE\s*:\s*([\d.,]+)/);
     if (mTempo) {
       op.parametrosMoldagem.push({
         parametro: "TEMPO REF (s)",
         valor: "Lado 1: " + mTempo[2] + " / Lado 2: " + mTempo[3],
-        tolMin: "",
+        tolMin: "—",
         tolMax: "Qtde: " + mTempo[4]
       });
     }
@@ -87,11 +94,9 @@ export function lerOP(texto) {
   // ---- Operações (o roteiro varia por OP) ----
   for (let i = 0; i < linhas.length; i++) {
     const l = linhas[i];
-    // Linha do recurso: começa com código tipo A000, B000, E000, L001, N001...
     const mRecurso = l.match(/^([A-Z]\d{3})\s+(.+)/);
     if (mRecurso) {
       const recursoNome = mRecurso[2].replace(/[_\s]+$/, "").trim();
-      // A operação está na próxima linha
       const proxima = (linhas[i + 1] || "").trim();
       const mOper = proxima.match(/^(\S+)\s+(.+)/);
       if (mOper) {
