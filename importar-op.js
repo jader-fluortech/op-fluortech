@@ -1,28 +1,29 @@
 // ==========================================================
-//  Importar OP — lê o arquivo, interpreta e mostra em cartões
+//  Importar OP — lê o arquivo, mostra em cartões e salva no banco
+//  Regras de reimportação: bloqueia OP ativa ou finalizada.
 // ==========================================================
 
 import { lerOP } from "./leitor-op.js";
+import { db } from "./firebase.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const campoArquivo = document.getElementById("arquivo-op");
 const areaConteudo = document.getElementById("conteudo-op");
+
+let opAtual = null;
 
 campoArquivo.addEventListener("change", function (evento) {
   const arquivo = evento.target.files[0];
   if (!arquivo) return;
 
   const leitor = new FileReader();
-
   leitor.onload = function () {
-    const texto = leitor.result;
-    const op = lerOP(texto);
-    mostrarOP(op);
+    opAtual = lerOP(leitor.result);
+    mostrarOP(opAtual);
   };
-
   leitor.onerror = function () {
     areaConteudo.innerHTML = "<p class='erro'>❌ Não foi possível ler o arquivo. Tente novamente.</p>";
   };
-
   leitor.readAsText(arquivo, "windows-1252");
 });
 
@@ -32,7 +33,6 @@ campoArquivo.addEventListener("change", function (evento) {
 function mostrarOP(op) {
   let html = "";
 
-  // ---- Cartão: dados gerais ----
   html += "<div class='cartao'>";
   html += "<h3>Dados da OP</h3>";
   html += "<div class='campos'>";
@@ -47,10 +47,8 @@ function mostrarOP(op) {
   html += linha("Desenho", op.desenho);
   html += "</div></div>";
 
-  // ---- Cartão: matéria-prima ----
   if (op.materiaPrima.length > 0) {
-    html += "<div class='cartao'>";
-    html += "<h3>Matéria-prima</h3>";
+    html += "<div class='cartao'><h3>Matéria-prima</h3>";
     op.materiaPrima.forEach(function (mp) {
       html += "<div class='campos'>";
       html += linha("Código", mp.codigo);
@@ -62,10 +60,8 @@ function mostrarOP(op) {
     html += "</div>";
   }
 
-  // ---- Cartão: parâmetros de moldagem ----
   if (op.parametrosMoldagem.length > 0) {
-    html += "<div class='cartao'>";
-    html += "<h3>Parâmetros de moldagem</h3>";
+    html += "<div class='cartao'><h3>Parâmetros de moldagem</h3>";
     html += "<table class='tabela-param'>";
     html += "<tr><th>Parâmetro</th><th>Especificado</th><th>Tol. mín.</th><th>Tol. máx.</th></tr>";
     op.parametrosMoldagem.forEach(function (p) {
@@ -74,10 +70,8 @@ function mostrarOP(op) {
     html += "</table></div>";
   }
 
-  // ---- Cartão: operações (o roteiro da peça) ----
   if (op.operacoes.length > 0) {
-    html += "<div class='cartao'>";
-    html += "<h3>Etapas do processo (" + op.operacoes.length + ")</h3>";
+    html += "<div class='cartao'><h3>Etapas do processo (" + op.operacoes.length + ")</h3>";
     html += "<ol class='lista-operacoes'>";
     op.operacoes.forEach(function (oper) {
       html += "<li><strong>" + oper.operacao + "</strong><br>";
@@ -86,16 +80,95 @@ function mostrarOP(op) {
     html += "</ol></div>";
   }
 
+  html += "<div class='area-salvar'>";
+  html += "<button id='btn-salvar' class='botao-salvar'>Salvar OP no sistema</button>";
+  html += "<p id='msg-salvar' class='msg-salvar'></p>";
+  html += "</div>";
+
   areaConteudo.innerHTML = html;
+  document.getElementById("btn-salvar").addEventListener("click", salvarOP);
 }
 
-// Campo normal (meia largura)
+// ----------------------------------------------------------
+//  Salva a OP no Firestore, aplicando as regras de reimportação
+// ----------------------------------------------------------
+async function salvarOP() {
+  const botao = document.getElementById("btn-salvar");
+  const msg = document.getElementById("msg-salvar");
+
+  if (!opAtual || !opAtual.numero) {
+    msg.textContent = "❌ OP sem número — não é possível salvar.";
+    msg.className = "msg-salvar erro-msg";
+    return;
+  }
+
+  botao.disabled = true;
+  msg.textContent = "Verificando…";
+  msg.className = "msg-salvar";
+
+  try {
+    const referencia = doc(db, "ordens_producao", opAtual.numero);
+    const existente = await getDoc(referencia);
+
+    // ---- Regras de reimportação ----
+    if (existente.exists()) {
+      const dadosExistentes = existente.data();
+      const status = dadosExistentes.status;
+
+      if (status === "finalizada") {
+        msg.innerHTML = "🔒 Esta OP já foi <strong>finalizada</strong>.<br>" +
+          "Para importar novamente com o mesmo número, contate o administrador para excluí-la do sistema.";
+        msg.className = "msg-salvar erro-msg";
+        return; // bloqueia, botão continua desabilitado
+      }
+
+      // Qualquer outro status significa que ainda está ativa
+      msg.innerHTML = "⚠️ Esta OP já está <strong>ativa e em andamento</strong> na produção.<br>" +
+        "Ela não foi importada novamente para não afetar os apontamentos.";
+      msg.className = "msg-salvar erro-msg";
+      return; // não sobrescreve
+    }
+
+    // ---- OP nova: monta as etapas e salva ----
+    const etapas = opAtual.operacoes.map(function (oper, indice) {
+      return {
+        ordem: indice + 1,
+        recursoCodigo: oper.recursoCodigo,
+        recurso: oper.recurso,
+        operacaoCodigo: oper.operacaoCodigo,
+        operacao: oper.operacao,
+        status: "pendente",       // pendente | em_producao | concluida
+        operadorNome: null,
+        operadorAssinatura: null,
+        apontamentos: null
+      };
+    });
+
+    const dados = Object.assign({}, opAtual, {
+      status: "ativa",           // ativa | finalizada
+      etapaAtual: 1,             // começa na primeira etapa
+      etapas: etapas,
+      importadaEm: new Date().toISOString()
+    });
+
+    await setDoc(referencia, dados);
+
+    msg.innerHTML = "✅ OP <strong>" + opAtual.numero + "</strong> salva no sistema.<br>" +
+      "Já está disponível para os operadores na primeira etapa.";
+    msg.className = "msg-salvar sucesso-msg";
+  } catch (erro) {
+    console.error("Erro ao salvar OP:", erro);
+    msg.textContent = "❌ Erro ao salvar: " + erro.message;
+    msg.className = "msg-salvar erro-msg";
+    botao.disabled = false;
+  }
+}
+
 function linha(rotulo, valor) {
   const conteudo = valor ? valor : "—";
   return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
 }
 
-// Campo largo (linha inteira) — para textos longos
 function linhaLarga(rotulo, valor) {
   const conteudo = valor ? valor : "—";
   return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
