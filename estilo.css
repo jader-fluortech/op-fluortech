@@ -336,8 +336,9 @@ body {
 }
 
 .msg-salvar {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 15px;
+  line-height: 1.5;
   min-height: 20px;
 }
 
