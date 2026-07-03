@@ -115,6 +115,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .rotulo {
@@ -128,6 +129,8 @@ body {
   font-size: 15px;
   color: #1f2933;
   font-weight: 500;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Tabela de parâmetros */
@@ -164,7 +167,6 @@ body {
   background-color: #f8f9fb;
   border-left: 3px solid #0b4f6c;
   border-radius: 6px;
-  position: relative;
 }
 
 .lista-operacoes li::before {
