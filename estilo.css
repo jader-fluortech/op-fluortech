@@ -31,6 +31,12 @@ body {
   font-weight: 600;
 }
 
+.cabecalho-direita {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .ambiente {
   background-color: #f0a500;
   color: #1f2933;
@@ -42,6 +48,20 @@ body {
   border-radius: 12px;
 }
 
+.botao-sair {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.botao-sair:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
 /* ===== Conteúdo ===== */
 .conteudo {
   flex: 1;
@@ -51,6 +71,96 @@ body {
   margin: 0 auto;
 }
 
+/* ===== Tela de login ===== */
+.tela-login {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.cartao-login {
+  background-color: #ffffff;
+  border: 1px solid #e1e5ea;
+  border-radius: 10px;
+  padding: 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cartao-login h2 {
+  font-size: 20px;
+  color: #0b4f6c;
+  margin-bottom: 4px;
+}
+
+.subtitulo-login {
+  font-size: 14px;
+  color: #7b8794;
+  margin-bottom: 24px;
+}
+
+.cartao-login label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52606d;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+
+.cartao-login input {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  border: 1px solid #cbd2d9;
+  border-radius: 8px;
+}
+
+.cartao-login input:focus {
+  outline: none;
+  border-color: #0b4f6c;
+}
+
+.botao-entrar {
+  width: 100%;
+  margin-top: 24px;
+  padding: 12px;
+  background-color: #0b4f6c;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-entrar:hover {
+  background-color: #0a4459;
+}
+
+.botao-entrar:disabled {
+  background-color: #9aa5b1;
+  cursor: default;
+}
+
+.msg-login {
+  margin-top: 14px;
+  font-size: 14px;
+  text-align: center;
+  min-height: 20px;
+}
+
+.erro-msg {
+  color: #b3261e;
+}
+
+.sucesso-msg {
+  color: #0b7a3b;
+}
+
+/* ===== Status ===== */
 .status {
   font-size: 15px;
   color: #52606d;
@@ -104,7 +214,6 @@ body {
   border-bottom: 2px solid #e1e5ea;
 }
 
-/* Campos rótulo + valor */
 .campos {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -118,7 +227,6 @@ body {
   min-width: 0;
 }
 
-/* Campo largo: ocupa as duas colunas (linha inteira) */
 .campo-largo {
   grid-column: 1 / -1;
 }
@@ -199,6 +307,38 @@ body {
   background-color: #fdecea;
   padding: 12px;
   border-radius: 8px;
+}
+
+/* ===== Botão salvar OP ===== */
+.area-salvar {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.botao-salvar {
+  padding: 14px 28px;
+  background-color: #0b7a3b;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-salvar:hover {
+  background-color: #096330;
+}
+
+.botao-salvar:disabled {
+  background-color: #9aa5b1;
+  cursor: default;
+}
+
+.msg-salvar {
+  margin-top: 12px;
+  font-size: 15px;
+  min-height: 20px;
 }
 
 /* ===== Rodapé ===== */
