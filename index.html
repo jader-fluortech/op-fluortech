@@ -15,11 +15,22 @@
 
   <main class="conteudo">
     <p id="status-conexao" class="status">Iniciando sistema…</p>
+
+    <section class="area-importar">
+      <h2>Importar Ordem de Produção</h2>
+      <label for="arquivo-op" class="rotulo-upload">
+        Carregue aqui a Ordem de Produção (OP)
+      </label>
+      <input type="file" id="arquivo-op" accept=".txt">
+      <pre id="conteudo-op" class="conteudo-op"></pre>
+    </section>
   </main>
 
   <footer class="rodape">
     <small>Sistema interno de acompanhamento de Ordens de Produção</small>
   </footer>
-<script type="module" src="app.js"></script>
+
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
