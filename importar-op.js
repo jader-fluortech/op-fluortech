@@ -37,10 +37,10 @@ function mostrarOP(op) {
   html += "<h3>Dados da OP</h3>";
   html += "<div class='campos'>";
   html += linha("Número da OP", op.numero);
-  html += linha("Cliente", op.cliente);
+  html += linhaLarga("Cliente", op.cliente);
   html += linha("Pedido do cliente", op.pedidoCliente);
   html += linha("Produto", op.produto);
-  html += linha("Descrição", op.descricao);
+  html += linhaLarga("Descrição", op.descricao);
   html += linha("Quantidade", op.quantidade);
   html += linha("Início previsto", op.iniPrevisto);
   html += linha("Fim efetivo", op.fimEfetivo);
@@ -56,7 +56,7 @@ function mostrarOP(op) {
       html += linha("Código", mp.codigo);
       html += linha("Lote", mp.lote);
       html += linha("Qtde MP", mp.qtdeMP);
-      html += linha("Descrição", mp.descricao);
+      html += linhaLarga("Descrição", mp.descricao);
       html += "</div>";
     });
     html += "</div>";
@@ -89,8 +89,14 @@ function mostrarOP(op) {
   areaConteudo.innerHTML = html;
 }
 
-// Função auxiliar: monta uma linha "rótulo: valor"
+// Campo normal (meia largura)
 function linha(rotulo, valor) {
   const conteudo = valor ? valor : "—";
   return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
+}
+
+// Campo largo (linha inteira) — para textos longos
+function linhaLarga(rotulo, valor) {
+  const conteudo = valor ? valor : "—";
+  return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
 }
