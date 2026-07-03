@@ -12,6 +12,16 @@ const areaConteudo = document.getElementById("conteudo-op");
 
 let opAtual = null;
 
+// Limpa o campo de upload e o conteúdo mostrado
+function limparUpload() {
+  campoArquivo.value = "";
+  areaConteudo.innerHTML = "";
+  opAtual = null;
+}
+
+// Ao carregar a página, garante que o campo começa vazio
+limparUpload();
+
 campoArquivo.addEventListener("change", function (evento) {
   const arquivo = evento.target.files[0];
   if (!arquivo) return;
@@ -110,7 +120,6 @@ async function salvarOP() {
     const referencia = doc(db, "ordens_producao", opAtual.numero);
     const existente = await getDoc(referencia);
 
-    // ---- Regras de reimportação ----
     if (existente.exists()) {
       const dadosExistentes = existente.data();
       const status = dadosExistentes.status;
@@ -119,17 +128,15 @@ async function salvarOP() {
         msg.innerHTML = "🔒 Esta OP já foi <strong>finalizada</strong>.<br>" +
           "Para importar novamente com o mesmo número, contate o administrador para excluí-la do sistema.";
         msg.className = "msg-salvar erro-msg";
-        return; // bloqueia, botão continua desabilitado
+        return;
       }
 
-      // Qualquer outro status significa que ainda está ativa
       msg.innerHTML = "⚠️ Esta OP já está <strong>ativa e em andamento</strong> na produção.<br>" +
         "Ela não foi importada novamente para não afetar os apontamentos.";
       msg.className = "msg-salvar erro-msg";
-      return; // não sobrescreve
+      return;
     }
 
-    // ---- OP nova: monta as etapas e salva ----
     const etapas = opAtual.operacoes.map(function (oper, indice) {
       return {
         ordem: indice + 1,
@@ -137,7 +144,7 @@ async function salvarOP() {
         recurso: oper.recurso,
         operacaoCodigo: oper.operacaoCodigo,
         operacao: oper.operacao,
-        status: "pendente",       // pendente | em_producao | concluida
+        status: "pendente",
         operadorNome: null,
         operadorAssinatura: null,
         apontamentos: null
@@ -145,8 +152,8 @@ async function salvarOP() {
     });
 
     const dados = Object.assign({}, opAtual, {
-      status: "ativa",           // ativa | finalizada
-      etapaAtual: 1,             // começa na primeira etapa
+      status: "ativa",
+      etapaAtual: 1,
       etapas: etapas,
       importadaEm: new Date().toISOString()
     });
@@ -156,6 +163,11 @@ async function salvarOP() {
     msg.innerHTML = "✅ OP <strong>" + opAtual.numero + "</strong> salva no sistema.<br>" +
       "Já está disponível para os operadores na primeira etapa.";
     msg.className = "msg-salvar sucesso-msg";
+
+    // Limpa o campo de upload depois de 2 segundos, para a próxima OP
+    setTimeout(function () {
+      campoArquivo.value = "";
+    }, 2000);
   } catch (erro) {
     console.error("Erro ao salvar OP:", erro);
     msg.textContent = "❌ Erro ao salvar: " + erro.message;
