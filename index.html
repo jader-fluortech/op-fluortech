@@ -10,20 +10,45 @@
 
   <header class="cabecalho">
     <h1>Projeto OP — Fluortech</h1>
-    <span class="ambiente" id="ambiente">ambiente de teste</span>
+    <div class="cabecalho-direita">
+      <span class="ambiente" id="ambiente">ambiente de teste</span>
+      <button id="btn-sair" class="botao-sair" style="display:none;">Sair</button>
+    </div>
   </header>
 
   <main class="conteudo">
-    <p id="status-conexao" class="status">Iniciando sistema…</p>
 
-    <section class="area-importar">
-      <h2>Importar Ordem de Produção</h2>
-      <label for="arquivo-op" class="rotulo-upload">
-        Carregue aqui a Ordem de Produção (OP)
-      </label>
-      <input type="file" id="arquivo-op" accept=".txt">
-      <pre id="conteudo-op" class="conteudo-op"></pre>
+    <!-- TELA DE LOGIN -->
+    <section id="tela-login" class="tela-login" style="display:none;">
+      <div class="cartao-login">
+        <h2>Acesso do PCP</h2>
+        <p class="subtitulo-login">Entre para importar Ordens de Produção</p>
+
+        <label for="email">E-mail</label>
+        <input type="email" id="email" placeholder="pcp@fluortech.com.br" autocomplete="username">
+
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+
+        <button id="btn-entrar" class="botao-entrar">Entrar</button>
+        <p id="msg-login" class="msg-login"></p>
+      </div>
     </section>
+
+    <!-- ÁREA DO PCP (só aparece depois do login) -->
+    <section id="area-pcp" style="display:none;">
+      <p id="status-conexao" class="status">Iniciando sistema…</p>
+
+      <section class="area-importar">
+        <h2>Importar Ordem de Produção</h2>
+        <label for="arquivo-op" class="rotulo-upload">
+          Carregue aqui a Ordem de Produção (OP)
+        </label>
+        <input type="file" id="arquivo-op" accept=".txt">
+        <pre id="conteudo-op" class="conteudo-op"></pre>
+      </section>
+    </section>
+
   </main>
 
   <footer class="rodape">
