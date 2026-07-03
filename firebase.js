@@ -1,11 +1,11 @@
 // ==========================================================
 //  Configuração do Firebase — Projeto OP Fluortech
-//  Este arquivo conecta o sistema ao banco de dados correto.
+//  Conecta o sistema ao banco de dados e ao login corretos.
 // ==========================================================
 
-// Importa as funções do Firebase (versão moderna, via link/CDN)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 // ----------------------------------------------------------
 //  AMBIENTE ATUAL
@@ -28,7 +28,6 @@ const configuracoes = {
     measurementId: "G-4EGDJPR3J2"
   },
 
-  // O ambiente de produção será preenchido no futuro.
   producao: {
     apiKey: "",
     authDomain: "",
@@ -47,6 +46,7 @@ const configAtiva = configuracoes[AMBIENTE];
 
 const app = initializeApp(configAtiva);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Deixa o banco e o nome do ambiente disponíveis para o resto do sistema
-export { db, AMBIENTE };
+// Deixa o banco, o login e o ambiente disponíveis para o resto do sistema
+export { db, auth, AMBIENTE };
