@@ -45,20 +45,153 @@ body {
 /* ===== Conteúdo ===== */
 .conteudo {
   flex: 1;
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  padding: 24px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .status {
-  font-size: 16px;
+  font-size: 15px;
   color: #52606d;
   background-color: #ffffff;
-  padding: 16px 24px;
+  padding: 12px 20px;
   border-radius: 8px;
   border: 1px solid #e1e5ea;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ===== Área de importar ===== */
+.area-importar h2 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #0b4f6c;
+}
+
+.rotulo-upload {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+#arquivo-op {
+  display: block;
+  margin-bottom: 24px;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px dashed #9aa5b1;
+  border-radius: 8px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* ===== Cartões ===== */
+.cartao {
+  background-color: #ffffff;
+  border: 1px solid #e1e5ea;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cartao h3 {
+  font-size: 16px;
+  color: #0b4f6c;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e1e5ea;
+}
+
+/* Campos rótulo + valor */
+.campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rotulo {
+  font-size: 12px;
+  color: #7b8794;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.valor {
+  font-size: 15px;
+  color: #1f2933;
+  font-weight: 500;
+}
+
+/* Tabela de parâmetros */
+.tabela-param {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabela-param th,
+.tabela-param td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.tabela-param th {
+  background-color: #f4f5f7;
+  color: #52606d;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Lista de operações */
+.lista-operacoes {
+  list-style: none;
+  counter-reset: etapa;
+}
+
+.lista-operacoes li {
+  counter-increment: etapa;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background-color: #f8f9fb;
+  border-left: 3px solid #0b4f6c;
+  border-radius: 6px;
+  position: relative;
+}
+
+.lista-operacoes li::before {
+  content: counter(etapa);
+  display: inline-block;
+  background-color: #0b4f6c;
+  color: #ffffff;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.recurso {
+  font-size: 13px;
+  color: #7b8794;
+}
+
+.erro {
+  color: #b3261e;
+  background-color: #fdecea;
+  padding: 12px;
+  border-radius: 8px;
 }
 
 /* ===== Rodapé ===== */
@@ -67,4 +200,12 @@ body {
   padding: 16px;
   color: #9aa5b1;
   border-top: 1px solid #e1e5ea;
+  margin-top: auto;
+}
+
+/* ===== Responsivo (tablet/celular) ===== */
+@media (max-width: 600px) {
+  .campos {
+    grid-template-columns: 1fr;
+  }
 }
