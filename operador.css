@@ -190,7 +190,7 @@
   background-color: #fbfbf9;
   border: 2px dashed #9aa5b1;
   border-radius: 10px;
-  touch-action: none;   /* impede a tela de rolar enquanto assina */
+  touch-action: none;
   cursor: crosshair;
   display: block;
 }
@@ -246,4 +246,43 @@
 
 .sucesso-msg {
   color: #0b7a3b;
+}
+
+/* ===== Resumo travado (etapa em andamento) ===== */
+.resumo-operador {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.resumo-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background-color: #f8f9fb;
+  border-radius: 8px;
+  border-left: 3px solid #0b4f6c;
+}
+
+.resumo-rotulo {
+  font-size: 13px;
+  color: #7b8794;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.resumo-valor {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.aviso-apontamento {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #7b8794;
+  text-align: center;
+  font-style: italic;
 }
