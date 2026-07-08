@@ -1,5 +1,5 @@
 // ==========================================================
-//  Tela do Operador — lista, abrir OP, identificação e iniciar etapa
+//  Tela do Operador — lista, abrir OP, identificação (2 estados)
 // ==========================================================
 
 import { db, AMBIENTE } from "./firebase.js";
@@ -18,9 +18,9 @@ const btnVoltar = document.getElementById("btn-voltar");
 etiquetaAmbiente.textContent = "ambiente de " + AMBIENTE;
 
 let opsCarregadas = [];
-let opAberta = null;          // OP aberta no momento
-let assinaturaCtx = null;     // contexto do quadro de assinatura
-let assinaturaVazia = true;   // se a assinatura ainda está em branco
+let opAberta = null;
+let assinaturaCtx = null;
+let assinaturaVazia = true;
 
 // ----------------------------------------------------------
 //  Escuta as OPs ativas
@@ -99,9 +99,13 @@ function abrirOP(op) {
   telaOp.style.display = "block";
   window.scrollTo(0, 0);
 
-  prepararAssinatura();
-  document.getElementById("btn-iniciar-etapa").addEventListener("click", iniciarEtapa);
-  document.getElementById("btn-limpar-assinatura").addEventListener("click", limparAssinatura);
+  const etapa = etapaAtualDa(op);
+  // Só prepara a assinatura e os botões se a etapa ainda estiver livre
+  if (etapa && etapa.status !== "em_producao") {
+    prepararAssinatura();
+    document.getElementById("btn-iniciar-etapa").addEventListener("click", iniciarEtapa);
+    document.getElementById("btn-limpar-assinatura").addEventListener("click", limparAssinatura);
+  }
 }
 
 btnVoltar.addEventListener("click", voltarParaLista);
@@ -115,7 +119,7 @@ function voltarParaLista() {
 }
 
 // ----------------------------------------------------------
-//  Ficha da OP + área de identificação
+//  Ficha da OP + identificação (com os 2 estados)
 // ----------------------------------------------------------
 function montarFicha(op) {
   const etapa = etapaAtualDa(op);
@@ -161,27 +165,40 @@ function montarFicha(op) {
     html += "</table></div>";
   }
 
-  // Área de identificação
-  html += "<div class='cartao cartao-identificacao'>";
-  html += "  <h3>Identificação do operador</h3>";
-  html += "  <label class='rotulo-campo' for='nome-operador'>Nome completo</label>";
-  html += "  <input type='text' id='nome-operador' class='input-nome' placeholder='Digite seu nome completo'>";
-  html += "  <label class='rotulo-campo'>Assinatura</label>";
-  html += "  <canvas id='quadro-assinatura' class='quadro-assinatura'></canvas>";
-  html += "  <button id='btn-limpar-assinatura' class='botao-limpar'>Limpar assinatura</button>";
-  html += "  <button id='btn-iniciar-etapa' class='botao-iniciar-etapa'>Iniciar etapa</button>";
-  html += "  <p id='msg-iniciar' class='msg-iniciar'></p>";
-  html += "</div>";
+  // ---- Área de identificação: dois estados ----
+  if (etapa && etapa.status === "em_producao") {
+    // ESTADO TRAVADO: resumo enxuto (nome + horários)
+    html += "<div class='cartao cartao-identificacao'>";
+    html += "  <h3>Etapa em andamento</h3>";
+    html += "  <div class='resumo-operador'>";
+    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>Operador</span><span class='resumo-valor'>" + (etapa.operadorNome || "—") + "</span></div>";
+    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>OP aberta em</span><span class='resumo-valor'>" + formatarDataHora(etapa.horarioAbertura) + "</span></div>";
+    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>Início do processo</span><span class='resumo-valor'>" + formatarDataHora(etapa.horarioInicioProcesso) + "</span></div>";
+    html += "  </div>";
+    html += "  <p class='aviso-apontamento'>A tela de apontamento entra no próximo passo.</p>";
+    html += "</div>";
+  } else {
+    // ESTADO EDITÁVEL: nome + assinatura + iniciar etapa
+    html += "<div class='cartao cartao-identificacao'>";
+    html += "  <h3>Identificação do operador</h3>";
+    html += "  <label class='rotulo-campo' for='nome-operador'>Nome completo</label>";
+    html += "  <input type='text' id='nome-operador' class='input-nome' placeholder='Digite seu nome completo'>";
+    html += "  <label class='rotulo-campo'>Assinatura</label>";
+    html += "  <canvas id='quadro-assinatura' class='quadro-assinatura'></canvas>";
+    html += "  <button id='btn-limpar-assinatura' class='botao-limpar'>Limpar assinatura</button>";
+    html += "  <button id='btn-iniciar-etapa' class='botao-iniciar-etapa'>Iniciar etapa</button>";
+    html += "  <p id='msg-iniciar' class='msg-iniciar'></p>";
+    html += "</div>";
+  }
 
   return html;
 }
 
 // ----------------------------------------------------------
-//  Quadro de assinatura (desenho com o dedo/mouse)
+//  Assinatura
 // ----------------------------------------------------------
 function prepararAssinatura() {
   const canvas = document.getElementById("quadro-assinatura");
-  // Ajusta o tamanho interno do canvas ao tamanho na tela
   const largura = canvas.offsetWidth;
   canvas.width = largura;
   canvas.height = 160;
@@ -199,7 +216,6 @@ function prepararAssinatura() {
     const ponto = evento.touches ? evento.touches[0] : evento;
     return { x: ponto.clientX - retangulo.left, y: ponto.clientY - retangulo.top };
   }
-
   function comecar(evento) {
     evento.preventDefault();
     desenhando = true;
@@ -208,7 +224,6 @@ function prepararAssinatura() {
     assinaturaCtx.beginPath();
     assinaturaCtx.moveTo(p.x, p.y);
   }
-
   function mover(evento) {
     if (!desenhando) return;
     evento.preventDefault();
@@ -216,10 +231,7 @@ function prepararAssinatura() {
     assinaturaCtx.lineTo(p.x, p.y);
     assinaturaCtx.stroke();
   }
-
-  function parar() {
-    desenhando = false;
-  }
+  function parar() { desenhando = false; }
 
   canvas.addEventListener("mousedown", comecar);
   canvas.addEventListener("mousemove", mover);
@@ -237,14 +249,13 @@ function limparAssinatura() {
 }
 
 // ----------------------------------------------------------
-//  Iniciar etapa (abre a OP: nome + assinatura + horário + trava)
+//  Iniciar etapa
 // ----------------------------------------------------------
 async function iniciarEtapa() {
   const botao = document.getElementById("btn-iniciar-etapa");
   const msg = document.getElementById("msg-iniciar");
   const nome = document.getElementById("nome-operador").value.trim();
 
-  // Validação: nome e assinatura obrigatórios
   if (!nome) {
     msg.textContent = "Digite seu nome completo.";
     msg.className = "msg-iniciar erro-msg";
@@ -262,8 +273,6 @@ async function iniciarEtapa() {
 
   try {
     const referencia = doc(db, "ordens_producao", opAberta._id);
-
-    // Trava: confere no banco se a etapa já não foi assumida por outro
     const atual = await getDoc(referencia);
     const dados = atual.data();
     const indiceEtapa = (dados.etapaAtual || 1) - 1;
@@ -272,26 +281,27 @@ async function iniciarEtapa() {
     if (etapa.status === "em_producao") {
       msg.textContent = "Esta etapa já foi assumida por " + (etapa.operadorNome || "outro operador") + ".";
       msg.className = "msg-iniciar erro-msg";
-      return; // não deixa dois operadores na mesma etapa
+      return;
     }
 
-    // Captura a assinatura como imagem (texto compactado)
     const canvas = document.getElementById("quadro-assinatura");
     const assinaturaImagem = canvas.toDataURL("image/png");
 
-    // Atualiza a etapa: assume o operador e registra o horário de abertura
     etapa.status = "em_producao";
     etapa.operadorNome = nome;
     etapa.operadorAssinatura = assinaturaImagem;
     etapa.horarioAbertura = new Date().toISOString();
-    etapa.dispositivo = null; // reservado para a Frente 1 (segurança)
+    etapa.horarioInicioProcesso = null;
+    etapa.dispositivo = null;
 
     dados.etapas[indiceEtapa] = etapa;
-
     await updateDoc(referencia, { etapas: dados.etapas });
 
-    msg.textContent = "✅ Etapa iniciada. (A tela de apontamento vem no próximo passo.)";
-    msg.className = "msg-iniciar sucesso-msg";
+    // Recarrega a ficha já no estado travado
+    opAberta = dados;
+    opAberta._id = referencia.id;
+    fichaOp.innerHTML = montarFicha(opAberta);
+    window.scrollTo(0, 0);
   } catch (erro) {
     console.error("Erro ao iniciar etapa:", erro);
     msg.textContent = "❌ Erro ao iniciar: " + erro.message;
@@ -307,6 +317,12 @@ function etapaAtualDa(op) {
   if (!op.etapas || op.etapas.length === 0) return null;
   const indice = (op.etapaAtual || 1) - 1;
   return op.etapas[indice] || op.etapas[0];
+}
+
+function formatarDataHora(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function campo(rotulo, valor) {
