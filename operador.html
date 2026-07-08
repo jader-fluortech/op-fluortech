@@ -20,15 +20,13 @@
     <section id="tela-lista">
       <h2 class="titulo-operador">Ordens de Produção ativas</h2>
       <p class="subtitulo-operador">Selecione a OP indicada pelo líder da sua área.</p>
-
       <div id="lista-ops" class="lista-ops"></div>
-
       <p id="lista-vazia" class="lista-vazia" style="display:none;">
         Nenhuma Ordem de Produção ativa no momento.
       </p>
     </section>
 
-    <!-- TELA B: OP ABERTA (ficha completa) -->
+    <!-- TELA B: OP ABERTA -->
     <section id="tela-op" style="display:none;">
       <button id="btn-voltar" class="botao-voltar">← Voltar para a lista</button>
       <div id="ficha-op"></div>
@@ -39,6 +37,17 @@
   <footer class="rodape">
     <small>Sistema interno de acompanhamento de Ordens de Produção</small>
   </footer>
+
+  <!-- JANELA DE CONFIRMAÇÃO (modal do site) -->
+  <div id="modal-confirmar" class="modal-fundo" style="display:none;">
+    <div class="modal-caixa">
+      <p id="modal-texto" class="modal-texto"></p>
+      <div class="modal-botoes">
+        <button id="modal-cancelar" class="modal-btn-cancelar">Cancelar</button>
+        <button id="modal-confirmar-btn" class="modal-btn-confirmar">Confirmar</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="operador.js"></script>
 
