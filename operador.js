@@ -1,10 +1,40 @@
 // ==========================================================
-//  Tela do Operador — lista, abrir OP, identificação (2 estados)
+//  Tela do Operador — lista, abrir OP, identificação e apontamento
 // ==========================================================
 
 import { db, AMBIENTE } from "./firebase.js";
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+// ---- Listas de motivos (padrão da fábrica) ----
+const MOTIVOS_PARADA = [
+  ["AF", "Construir/ajuste/troca ferramenta"], ["AM", "Ajustar máquina"],
+  ["CA", "Falta calibrador"], ["FE", "Falta de energia elétrica"],
+  ["FM", "Falta de matéria-prima"], ["FO", "Falta de operador"],
+  ["FP", "Falta de programação"], ["LM", "Limpeza de molde"],
+  ["MA", "Construir/ajuste/troca mandril"], ["MO", "Montagem molde"],
+  ["OU", "Outros"], ["PA", "Parada para afiação"],
+  ["PC", "Parado pela chefia"], ["PCP", "PCP"],
+  ["PL", "Parada para limpeza"], ["PM", "Parada para manutenção"],
+  ["PP", "Peneirar pó"], ["PQ", "Parada pela qualidade"],
+  ["PRO", "Processo / amostra"], ["RE", "Reunião"],
+  ["RP", "Repasse de peças"], ["RT", "Retrabalho"],
+  ["SP", "Setup"], ["TP", "Troca de programação"]
+];
+
+const MOTIVOS_PERDA = [
+  ["01", "Ø externo maior"], ["02", "Ø externo menor"],
+  ["03", "Ø interno maior"], ["04", "Ø interno menor"],
+  ["05", "Altura maior"], ["06", "Altura menor"],
+  ["07", "Comprimento maior"], ["08", "Comprimento menor"],
+  ["09", "Parede maior"], ["10", "Parede menor"],
+  ["11", "Rebarba"], ["12", "Deformação"],
+  ["13", "Contaminação"], ["14", "Trincas"],
+  ["15", "Peças misturadas"], ["16", "Sujeira"],
+  ["17", "Marcas/arranhões"], ["18", "Matéria-prima trocada"],
+  ["19", "Falha do material"], ["20", "Rugosidade"],
+  ["21", "Identificação"], ["22", "Outros"]
+];
 
 const listaOps = document.getElementById("lista-ops");
 const listaVazia = document.getElementById("lista-vazia");
@@ -21,6 +51,7 @@ let opsCarregadas = [];
 let opAberta = null;
 let assinaturaCtx = null;
 let assinaturaVazia = true;
+let cronoAutosave = null;   // controla o "espera 1 segundo" do autosave
 
 // ----------------------------------------------------------
 //  Escuta as OPs ativas
@@ -38,7 +69,8 @@ onSnapshot(consulta, function (resultado) {
     dados._id = documento.id;
     opsCarregadas.push(dados);
   });
-  montarLista(opsCarregadas);
+  // Só remonta a lista se ela estiver visível (não atrapalha quem está apontando)
+  if (telaLista.style.display !== "none") montarLista(opsCarregadas);
 }, function (erro) {
   console.error("Erro ao carregar OPs:", erro);
   listaOps.innerHTML = "<p class='erro'>Não foi possível carregar as OPs. Tente atualizar a página.</p>";
@@ -94,14 +126,21 @@ function montarLista(ops) {
 // ----------------------------------------------------------
 function abrirOP(op) {
   opAberta = op;
-  fichaOp.innerHTML = montarFicha(op);
-  telaLista.style.display = "none";
-  telaOp.style.display = "block";
-  window.scrollTo(0, 0);
-
   const etapa = etapaAtualDa(op);
-  // Só prepara a assinatura e os botões se a etapa ainda estiver livre
-  if (etapa && etapa.status !== "em_producao") {
+
+  if (etapa && etapa.status === "em_producao") {
+    // já assumida → vai direto para o apontamento
+    fichaOp.innerHTML = montarFicha(op) + montarApontamento(op);
+    telaLista.style.display = "none";
+    telaOp.style.display = "block";
+    window.scrollTo(0, 0);
+    ligarApontamento();
+  } else {
+    // livre → identificação
+    fichaOp.innerHTML = montarFicha(op);
+    telaLista.style.display = "none";
+    telaOp.style.display = "block";
+    window.scrollTo(0, 0);
     prepararAssinatura();
     document.getElementById("btn-iniciar-etapa").addEventListener("click", iniciarEtapa);
     document.getElementById("btn-limpar-assinatura").addEventListener("click", limparAssinatura);
@@ -115,11 +154,12 @@ function voltarParaLista() {
   telaLista.style.display = "block";
   fichaOp.innerHTML = "";
   opAberta = null;
+  montarLista(opsCarregadas);
   window.scrollTo(0, 0);
 }
 
 // ----------------------------------------------------------
-//  Ficha da OP + identificação (com os 2 estados)
+//  Ficha da OP (dados) + identificação (se etapa livre)
 // ----------------------------------------------------------
 function montarFicha(op) {
   const etapa = etapaAtualDa(op);
@@ -165,20 +205,8 @@ function montarFicha(op) {
     html += "</table></div>";
   }
 
-  // ---- Área de identificação: dois estados ----
-  if (etapa && etapa.status === "em_producao") {
-    // ESTADO TRAVADO: resumo enxuto (nome + horários)
-    html += "<div class='cartao cartao-identificacao'>";
-    html += "  <h3>Etapa em andamento</h3>";
-    html += "  <div class='resumo-operador'>";
-    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>Operador</span><span class='resumo-valor'>" + (etapa.operadorNome || "—") + "</span></div>";
-    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>OP aberta em</span><span class='resumo-valor'>" + formatarDataHora(etapa.horarioAbertura) + "</span></div>";
-    html += "    <div class='resumo-linha'><span class='resumo-rotulo'>Início do processo</span><span class='resumo-valor'>" + formatarDataHora(etapa.horarioInicioProcesso) + "</span></div>";
-    html += "  </div>";
-    html += "  <p class='aviso-apontamento'>A tela de apontamento entra no próximo passo.</p>";
-    html += "</div>";
-  } else {
-    // ESTADO EDITÁVEL: nome + assinatura + iniciar etapa
+  // Identificação só quando a etapa está livre
+  if (!(etapa && etapa.status === "em_producao")) {
     html += "<div class='cartao cartao-identificacao'>";
     html += "  <h3>Identificação do operador</h3>";
     html += "  <label class='rotulo-campo' for='nome-operador'>Nome completo</label>";
@@ -192,6 +220,187 @@ function montarFicha(op) {
   }
 
   return html;
+}
+
+// ----------------------------------------------------------
+//  Tela 2 — Apontamento
+// ----------------------------------------------------------
+function montarApontamento(op) {
+  const etapa = etapaAtualDa(op);
+  const ap = etapa.apontamentos || {};
+  let html = "";
+
+  // Resumo da peça + operador
+  html += "<div class='cartao cartao-apontamento'>";
+  html += "  <h3>Apontamento — " + (etapa.operacao || "etapa") + "</h3>";
+  html += "  <div class='resumo-peca'>";
+  html += "    <span><strong>OP:</strong> " + (op.numero || "—") + "</span>";
+  html += "    <span><strong>Cliente:</strong> " + (op.cliente || "—") + "</span>";
+  html += "    <span><strong>Produto:</strong> " + (op.produto || "—") + "</span>";
+  html += "    <span><strong>Qtde:</strong> " + (op.quantidade || "—") + "</span>";
+  html += "    <span><strong>Operador:</strong> " + (etapa.operadorNome || "—") + "</span>";
+  html += "  </div>";
+
+  // Início do processo
+  html += "  <div class='linha-inicio'>";
+  html += "    <button id='btn-iniciar-processo' class='botao-iniciar-processo'>Iniciar processo</button>";
+  html += "    <div class='campo-hora'><label>Hora de início</label>";
+  html += "      <input type='time' id='hora-inicio' value='" + (ap.horaInicio || "") + "'></div>";
+  html += "  </div>";
+
+  // Fim + quantidade
+  html += "  <div class='grade-apontamento'>";
+  html += "    <div class='campo-ap'><label>Hora de fim</label><input type='time' id='hora-fim' value='" + (ap.horaFim || "") + "'></div>";
+  html += "    <div class='campo-ap'><label>Qtde produzida</label><input type='number' id='qtde-produzida' value='" + (ap.qtdeProduzida || "") + "' min='0'></div>";
+  html += "  </div>";
+
+  // Perdas
+  html += "  <div class='bloco-perda'>";
+  html += "    <div class='grade-apontamento'>";
+  html += "      <div class='campo-ap'><label>Perdas (qtde)</label><input type='number' id='qtde-perda' value='" + (ap.qtdePerda || "") + "' min='0'></div>";
+  html += "      <div class='campo-ap'><label>Motivo da perda</label>" + selectMotivos("motivo-perda", MOTIVOS_PERDA, ap.motivoPerda) + "</div>";
+  html += "    </div>";
+  html += "  </div>";
+
+  // Paradas
+  html += "  <div class='bloco-paradas'>";
+  html += "    <div class='paradas-topo'><label>Paradas</label>";
+  html += "      <button id='btn-add-parada' class='botao-add-parada'>+ Adicionar parada</button></div>";
+  html += "    <div id='lista-paradas'></div>";
+  html += "  </div>";
+
+  // Aviso de autosave
+  html += "  <p id='aviso-autosave' class='aviso-autosave'></p>";
+
+  html += "</div>";
+  return html;
+}
+
+// Monta o <select> de motivos
+function selectMotivos(id, lista, selecionado) {
+  let s = "<select id='" + id + "'><option value=''>Selecionar…</option>";
+  lista.forEach(function (m) {
+    const sel = (selecionado === m[0]) ? " selected" : "";
+    s += "<option value='" + m[0] + "'" + sel + ">" + m[0] + " — " + m[1] + "</option>";
+  });
+  s += "</select>";
+  return s;
+}
+
+// ----------------------------------------------------------
+//  Liga os eventos da Tela 2 (após montar)
+// ----------------------------------------------------------
+function ligarApontamento() {
+  const etapa = etapaAtualDa(opAberta);
+  const ap = etapa.apontamentos || {};
+
+  // Botão iniciar processo (preenche a hora, mas o campo continua editável)
+  document.getElementById("btn-iniciar-processo").addEventListener("click", function () {
+    const agora = new Date();
+    const hh = String(agora.getHours()).padStart(2, "0");
+    const mm = String(agora.getMinutes()).padStart(2, "0");
+    document.getElementById("hora-inicio").value = hh + ":" + mm;
+    agendarAutosave();
+  });
+
+  // Autosave em qualquer mudança dos campos
+  ["hora-inicio", "hora-fim", "qtde-produzida", "qtde-perda", "motivo-perda"].forEach(function (id) {
+    const el = document.getElementById(id);
+    el.addEventListener("input", agendarAutosave);
+    el.addEventListener("change", agendarAutosave);
+  });
+
+  // Paradas já salvas
+  const paradas = ap.paradas || [];
+  paradas.forEach(function (p) { adicionarParada(p); });
+
+  document.getElementById("btn-add-parada").addEventListener("click", function () {
+    adicionarParada(null);
+    agendarAutosave();
+  });
+}
+
+// Adiciona uma linha de parada na tela
+function adicionarParada(dados) {
+  const container = document.getElementById("lista-paradas");
+  const div = document.createElement("div");
+  div.className = "linha-parada";
+  div.innerHTML =
+    "<div class='campo-ap'><label>Início</label><input type='time' class='parada-inicio' value='" + ((dados && dados.inicio) || "") + "'></div>" +
+    "<div class='campo-ap'><label>Fim</label><input type='time' class='parada-fim' value='" + ((dados && dados.fim) || "") + "'></div>" +
+    "<div class='campo-ap campo-ap-largo'><label>Motivo</label>" + selectMotivos("", MOTIVOS_PARADA, dados && dados.motivo) + "</div>" +
+    "<button class='botao-remover-parada' title='Remover parada'>×</button>";
+
+  // autosave nos campos da parada
+  div.querySelectorAll("input, select").forEach(function (el) {
+    el.addEventListener("input", agendarAutosave);
+    el.addEventListener("change", agendarAutosave);
+  });
+
+  // remover com confirmação
+  div.querySelector(".botao-remover-parada").addEventListener("click", function () {
+    const confirmar = confirm("Tem certeza que deseja apagar esta parada?");
+    if (confirmar) {
+      div.remove();
+      agendarAutosave();
+    }
+  });
+
+  container.appendChild(div);
+}
+
+// ----------------------------------------------------------
+//  Autosave (espera ~1s após parar de digitar)
+// ----------------------------------------------------------
+function agendarAutosave() {
+  const aviso = document.getElementById("aviso-autosave");
+  if (aviso) { aviso.textContent = "salvando…"; aviso.className = "aviso-autosave salvando"; }
+
+  if (cronoAutosave) clearTimeout(cronoAutosave);
+  cronoAutosave = setTimeout(salvarApontamento, 1000);
+}
+
+async function salvarApontamento() {
+  const aviso = document.getElementById("aviso-autosave");
+  try {
+    // Coleta os campos
+    const paradas = [];
+    document.querySelectorAll("#lista-paradas .linha-parada").forEach(function (linha) {
+      paradas.push({
+        inicio: linha.querySelector(".parada-inicio").value,
+        fim: linha.querySelector(".parada-fim").value,
+        motivo: linha.querySelector("select").value
+      });
+    });
+
+    const apontamento = {
+      horaInicio: document.getElementById("hora-inicio").value,
+      horaFim: document.getElementById("hora-fim").value,
+      qtdeProduzida: document.getElementById("qtde-produzida").value,
+      qtdePerda: document.getElementById("qtde-perda").value,
+      motivoPerda: document.getElementById("motivo-perda").value,
+      paradas: paradas,
+      atualizadoEm: new Date().toISOString()
+    };
+
+    const referencia = doc(db, "ordens_producao", opAberta._id);
+    const atual = await getDoc(referencia);
+    const dados = atual.data();
+    const indiceEtapa = (dados.etapaAtual || 1) - 1;
+
+    // Registra o horário de início do processo na primeira vez que for preenchido
+    if (apontamento.horaInicio && !dados.etapas[indiceEtapa].horarioInicioProcesso) {
+      dados.etapas[indiceEtapa].horarioInicioProcesso = new Date().toISOString();
+    }
+
+    dados.etapas[indiceEtapa].apontamentos = apontamento;
+    await updateDoc(referencia, { etapas: dados.etapas });
+
+    if (aviso) { aviso.textContent = "✓ salvo"; aviso.className = "aviso-autosave salvo"; }
+  } catch (erro) {
+    console.error("Erro no autosave:", erro);
+    if (aviso) { aviso.textContent = "⚠ erro ao salvar"; aviso.className = "aviso-autosave erro-salvar"; }
+  }
 }
 
 // ----------------------------------------------------------
@@ -210,27 +419,13 @@ function prepararAssinatura() {
   assinaturaVazia = true;
 
   let desenhando = false;
-
   function posicao(evento) {
-    const retangulo = canvas.getBoundingClientRect();
-    const ponto = evento.touches ? evento.touches[0] : evento;
-    return { x: ponto.clientX - retangulo.left, y: ponto.clientY - retangulo.top };
+    const r = canvas.getBoundingClientRect();
+    const p = evento.touches ? evento.touches[0] : evento;
+    return { x: p.clientX - r.left, y: p.clientY - r.top };
   }
-  function comecar(evento) {
-    evento.preventDefault();
-    desenhando = true;
-    assinaturaVazia = false;
-    const p = posicao(evento);
-    assinaturaCtx.beginPath();
-    assinaturaCtx.moveTo(p.x, p.y);
-  }
-  function mover(evento) {
-    if (!desenhando) return;
-    evento.preventDefault();
-    const p = posicao(evento);
-    assinaturaCtx.lineTo(p.x, p.y);
-    assinaturaCtx.stroke();
-  }
+  function comecar(e) { e.preventDefault(); desenhando = true; assinaturaVazia = false; const p = posicao(e); assinaturaCtx.beginPath(); assinaturaCtx.moveTo(p.x, p.y); }
+  function mover(e) { if (!desenhando) return; e.preventDefault(); const p = posicao(e); assinaturaCtx.lineTo(p.x, p.y); assinaturaCtx.stroke(); }
   function parar() { desenhando = false; }
 
   canvas.addEventListener("mousedown", comecar);
@@ -256,16 +451,8 @@ async function iniciarEtapa() {
   const msg = document.getElementById("msg-iniciar");
   const nome = document.getElementById("nome-operador").value.trim();
 
-  if (!nome) {
-    msg.textContent = "Digite seu nome completo.";
-    msg.className = "msg-iniciar erro-msg";
-    return;
-  }
-  if (assinaturaVazia) {
-    msg.textContent = "Assine no quadro antes de iniciar.";
-    msg.className = "msg-iniciar erro-msg";
-    return;
-  }
+  if (!nome) { msg.textContent = "Digite seu nome completo."; msg.className = "msg-iniciar erro-msg"; return; }
+  if (assinaturaVazia) { msg.textContent = "Assine no quadro antes de iniciar."; msg.className = "msg-iniciar erro-msg"; return; }
 
   botao.disabled = true;
   msg.textContent = "Iniciando…";
@@ -285,23 +472,23 @@ async function iniciarEtapa() {
     }
 
     const canvas = document.getElementById("quadro-assinatura");
-    const assinaturaImagem = canvas.toDataURL("image/png");
-
     etapa.status = "em_producao";
     etapa.operadorNome = nome;
-    etapa.operadorAssinatura = assinaturaImagem;
+    etapa.operadorAssinatura = canvas.toDataURL("image/png");
     etapa.horarioAbertura = new Date().toISOString();
     etapa.horarioInicioProcesso = null;
     etapa.dispositivo = null;
+    etapa.apontamentos = null;
 
     dados.etapas[indiceEtapa] = etapa;
     await updateDoc(referencia, { etapas: dados.etapas });
 
-    // Recarrega a ficha já no estado travado
+    // Recarrega já na Tela 2 (apontamento)
     opAberta = dados;
     opAberta._id = referencia.id;
-    fichaOp.innerHTML = montarFicha(opAberta);
+    fichaOp.innerHTML = montarFicha(opAberta) + montarApontamento(opAberta);
     window.scrollTo(0, 0);
+    ligarApontamento();
   } catch (erro) {
     console.error("Erro ao iniciar etapa:", erro);
     msg.textContent = "❌ Erro ao iniciar: " + erro.message;
@@ -317,12 +504,6 @@ function etapaAtualDa(op) {
   if (!op.etapas || op.etapas.length === 0) return null;
   const indice = (op.etapaAtual || 1) - 1;
   return op.etapas[indice] || op.etapas[0];
-}
-
-function formatarDataHora(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function campo(rotulo, valor) {
