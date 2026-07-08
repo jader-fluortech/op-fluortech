@@ -1,0 +1,115 @@
+/* ==========================================================
+   Visual da tela do operador (lista de OPs)
+   Pensado para tablet: cartões grandes e status claro.
+   ========================================================== */
+
+.titulo-operador {
+  font-size: 22px;
+  color: #0b4f6c;
+  margin-bottom: 4px;
+}
+
+.subtitulo-operador {
+  font-size: 15px;
+  color: #7b8794;
+  margin-bottom: 24px;
+}
+
+.lista-ops {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Cartão de cada OP */
+.op-card {
+  background-color: #ffffff;
+  border: 1px solid #e1e5ea;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 6px solid #9aa5b1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* OP disponível: destaque verde */
+.op-card.disponivel {
+  border-left-color: #0b7a3b;
+}
+
+/* OP ocupada: destaque laranja/cinza, um pouco mais apagada */
+.op-card.ocupada {
+  border-left-color: #f0a500;
+  background-color: #fbfbf9;
+}
+
+.op-card-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.op-numero {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2933;
+}
+
+/* Etiqueta de status */
+.status-disponivel,
+.status-ocupada {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-disponivel {
+  background-color: #e3f4ea;
+  color: #0b7a3b;
+}
+
+.status-ocupada {
+  background-color: #fdf0d5;
+  color: #9a6700;
+}
+
+.op-card-corpo p {
+  margin-bottom: 4px;
+}
+
+.op-cliente {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.op-peca {
+  font-size: 14px;
+  color: #52606d;
+}
+
+.op-etapa {
+  font-size: 14px;
+  color: #52606d;
+  margin-top: 8px;
+}
+
+.op-etapa strong {
+  color: #0b4f6c;
+}
+
+/* Mensagem de lista vazia */
+.lista-vazia {
+  text-align: center;
+  color: #7b8794;
+  font-size: 16px;
+  padding: 40px 20px;
+  background-color: #ffffff;
+  border: 1px dashed #cbd2d9;
+  border-radius: 12px;
+}
