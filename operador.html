@@ -15,14 +15,25 @@
   </header>
 
   <main class="conteudo">
-    <h2 class="titulo-operador">Ordens de Produção ativas</h2>
-    <p class="subtitulo-operador">Selecione a OP indicada pelo líder da sua área.</p>
 
-    <div id="lista-ops" class="lista-ops"></div>
+    <!-- TELA A: LISTA DE OPs -->
+    <section id="tela-lista">
+      <h2 class="titulo-operador">Ordens de Produção ativas</h2>
+      <p class="subtitulo-operador">Selecione a OP indicada pelo líder da sua área.</p>
 
-    <p id="lista-vazia" class="lista-vazia" style="display:none;">
-      Nenhuma Ordem de Produção ativa no momento.
-    </p>
+      <div id="lista-ops" class="lista-ops"></div>
+
+      <p id="lista-vazia" class="lista-vazia" style="display:none;">
+        Nenhuma Ordem de Produção ativa no momento.
+      </p>
+    </section>
+
+    <!-- TELA B: OP ABERTA (ficha completa) -->
+    <section id="tela-op" style="display:none;">
+      <button id="btn-voltar" class="botao-voltar">← Voltar para a lista</button>
+      <div id="ficha-op"></div>
+    </section>
+
   </main>
 
   <footer class="rodape">
