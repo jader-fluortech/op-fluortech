@@ -1,9 +1,9 @@
 // ==========================================================
-//  Tela do Operador — lista de OPs ativas + abrir OP (ficha completa)
+//  Tela do Operador — lista, abrir OP, identificação e iniciar etapa
 // ==========================================================
 
 import { db, AMBIENTE } from "./firebase.js";
-import { collection, query, where, orderBy, onSnapshot }
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const listaOps = document.getElementById("lista-ops");
@@ -17,11 +17,13 @@ const btnVoltar = document.getElementById("btn-voltar");
 
 etiquetaAmbiente.textContent = "ambiente de " + AMBIENTE;
 
-// Guarda as OPs carregadas, para abrir pela lista
 let opsCarregadas = [];
+let opAberta = null;          // OP aberta no momento
+let assinaturaCtx = null;     // contexto do quadro de assinatura
+let assinaturaVazia = true;   // se a assinatura ainda está em branco
 
 // ----------------------------------------------------------
-//  Escuta as OPs ativas em tempo real
+//  Escuta as OPs ativas
 // ----------------------------------------------------------
 const consulta = query(
   collection(db, "ordens_producao"),
@@ -43,7 +45,7 @@ onSnapshot(consulta, function (resultado) {
 });
 
 // ----------------------------------------------------------
-//  Monta a lista visual das OPs
+//  Lista
 // ----------------------------------------------------------
 function montarLista(ops) {
   if (ops.length === 0) {
@@ -79,7 +81,6 @@ function montarLista(ops) {
 
   listaOps.innerHTML = html;
 
-  // Liga o clique de cada cartão para abrir a OP
   document.querySelectorAll(".op-card").forEach(function (cartao) {
     cartao.addEventListener("click", function () {
       const indice = parseInt(cartao.getAttribute("data-indice"), 10);
@@ -89,36 +90,42 @@ function montarLista(ops) {
 }
 
 // ----------------------------------------------------------
-//  Abre a OP: troca a lista pela ficha completa
+//  Abrir OP
 // ----------------------------------------------------------
 function abrirOP(op) {
+  opAberta = op;
   fichaOp.innerHTML = montarFicha(op);
   telaLista.style.display = "none";
   telaOp.style.display = "block";
   window.scrollTo(0, 0);
+
+  prepararAssinatura();
+  document.getElementById("btn-iniciar-etapa").addEventListener("click", iniciarEtapa);
+  document.getElementById("btn-limpar-assinatura").addEventListener("click", limparAssinatura);
 }
 
-btnVoltar.addEventListener("click", function () {
+btnVoltar.addEventListener("click", voltarParaLista);
+
+function voltarParaLista() {
   telaOp.style.display = "none";
   telaLista.style.display = "block";
   fichaOp.innerHTML = "";
+  opAberta = null;
   window.scrollTo(0, 0);
-});
+}
 
 // ----------------------------------------------------------
-//  Monta a ficha completa da peça (todos os dados da OP)
+//  Ficha da OP + área de identificação
 // ----------------------------------------------------------
 function montarFicha(op) {
   const etapa = etapaAtualDa(op);
   let html = "";
 
-  // Cabeçalho da OP aberta
   html += "<div class='op-aberta-cabecalho'>";
   html += "  <h2>OP " + (op.numero || "—") + "</h2>";
   html += "  <p>Etapa atual: <strong>" + (etapa ? etapa.operacao : "—") + "</strong></p>";
   html += "</div>";
 
-  // Cartão: dados da OP
   html += "<div class='cartao'><h3>Dados da OP</h3><div class='campos'>";
   html += campo("Número da OP", op.numero);
   html += campoLargo("Cliente", op.cliente);
@@ -131,7 +138,6 @@ function montarFicha(op) {
   html += campo("Desenho", op.desenho);
   html += "</div></div>";
 
-  // Cartão: matéria-prima
   if (op.materiaPrima && op.materiaPrima.length > 0) {
     html += "<div class='cartao'><h3>Matéria-prima</h3>";
     op.materiaPrima.forEach(function (mp) {
@@ -145,7 +151,6 @@ function montarFicha(op) {
     html += "</div>";
   }
 
-  // Cartão: parâmetros de moldagem
   if (op.parametrosMoldagem && op.parametrosMoldagem.length > 0) {
     html += "<div class='cartao'><h3>Parâmetros de moldagem</h3>";
     html += "<table class='tabela-param'>";
@@ -156,7 +161,143 @@ function montarFicha(op) {
     html += "</table></div>";
   }
 
+  // Área de identificação
+  html += "<div class='cartao cartao-identificacao'>";
+  html += "  <h3>Identificação do operador</h3>";
+  html += "  <label class='rotulo-campo' for='nome-operador'>Nome completo</label>";
+  html += "  <input type='text' id='nome-operador' class='input-nome' placeholder='Digite seu nome completo'>";
+  html += "  <label class='rotulo-campo'>Assinatura</label>";
+  html += "  <canvas id='quadro-assinatura' class='quadro-assinatura'></canvas>";
+  html += "  <button id='btn-limpar-assinatura' class='botao-limpar'>Limpar assinatura</button>";
+  html += "  <button id='btn-iniciar-etapa' class='botao-iniciar-etapa'>Iniciar etapa</button>";
+  html += "  <p id='msg-iniciar' class='msg-iniciar'></p>";
+  html += "</div>";
+
   return html;
+}
+
+// ----------------------------------------------------------
+//  Quadro de assinatura (desenho com o dedo/mouse)
+// ----------------------------------------------------------
+function prepararAssinatura() {
+  const canvas = document.getElementById("quadro-assinatura");
+  // Ajusta o tamanho interno do canvas ao tamanho na tela
+  const largura = canvas.offsetWidth;
+  canvas.width = largura;
+  canvas.height = 160;
+
+  assinaturaCtx = canvas.getContext("2d");
+  assinaturaCtx.lineWidth = 2.5;
+  assinaturaCtx.lineCap = "round";
+  assinaturaCtx.strokeStyle = "#1f2933";
+  assinaturaVazia = true;
+
+  let desenhando = false;
+
+  function posicao(evento) {
+    const retangulo = canvas.getBoundingClientRect();
+    const ponto = evento.touches ? evento.touches[0] : evento;
+    return { x: ponto.clientX - retangulo.left, y: ponto.clientY - retangulo.top };
+  }
+
+  function comecar(evento) {
+    evento.preventDefault();
+    desenhando = true;
+    assinaturaVazia = false;
+    const p = posicao(evento);
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(p.x, p.y);
+  }
+
+  function mover(evento) {
+    if (!desenhando) return;
+    evento.preventDefault();
+    const p = posicao(evento);
+    assinaturaCtx.lineTo(p.x, p.y);
+    assinaturaCtx.stroke();
+  }
+
+  function parar() {
+    desenhando = false;
+  }
+
+  canvas.addEventListener("mousedown", comecar);
+  canvas.addEventListener("mousemove", mover);
+  canvas.addEventListener("mouseup", parar);
+  canvas.addEventListener("mouseleave", parar);
+  canvas.addEventListener("touchstart", comecar, { passive: false });
+  canvas.addEventListener("touchmove", mover, { passive: false });
+  canvas.addEventListener("touchend", parar);
+}
+
+function limparAssinatura() {
+  const canvas = document.getElementById("quadro-assinatura");
+  assinaturaCtx.clearRect(0, 0, canvas.width, canvas.height);
+  assinaturaVazia = true;
+}
+
+// ----------------------------------------------------------
+//  Iniciar etapa (abre a OP: nome + assinatura + horário + trava)
+// ----------------------------------------------------------
+async function iniciarEtapa() {
+  const botao = document.getElementById("btn-iniciar-etapa");
+  const msg = document.getElementById("msg-iniciar");
+  const nome = document.getElementById("nome-operador").value.trim();
+
+  // Validação: nome e assinatura obrigatórios
+  if (!nome) {
+    msg.textContent = "Digite seu nome completo.";
+    msg.className = "msg-iniciar erro-msg";
+    return;
+  }
+  if (assinaturaVazia) {
+    msg.textContent = "Assine no quadro antes de iniciar.";
+    msg.className = "msg-iniciar erro-msg";
+    return;
+  }
+
+  botao.disabled = true;
+  msg.textContent = "Iniciando…";
+  msg.className = "msg-iniciar";
+
+  try {
+    const referencia = doc(db, "ordens_producao", opAberta._id);
+
+    // Trava: confere no banco se a etapa já não foi assumida por outro
+    const atual = await getDoc(referencia);
+    const dados = atual.data();
+    const indiceEtapa = (dados.etapaAtual || 1) - 1;
+    const etapa = dados.etapas[indiceEtapa];
+
+    if (etapa.status === "em_producao") {
+      msg.textContent = "Esta etapa já foi assumida por " + (etapa.operadorNome || "outro operador") + ".";
+      msg.className = "msg-iniciar erro-msg";
+      return; // não deixa dois operadores na mesma etapa
+    }
+
+    // Captura a assinatura como imagem (texto compactado)
+    const canvas = document.getElementById("quadro-assinatura");
+    const assinaturaImagem = canvas.toDataURL("image/png");
+
+    // Atualiza a etapa: assume o operador e registra o horário de abertura
+    etapa.status = "em_producao";
+    etapa.operadorNome = nome;
+    etapa.operadorAssinatura = assinaturaImagem;
+    etapa.horarioAbertura = new Date().toISOString();
+    etapa.dispositivo = null; // reservado para a Frente 1 (segurança)
+
+    dados.etapas[indiceEtapa] = etapa;
+
+    await updateDoc(referencia, { etapas: dados.etapas });
+
+    msg.textContent = "✅ Etapa iniciada. (A tela de apontamento vem no próximo passo.)";
+    msg.className = "msg-iniciar sucesso-msg";
+  } catch (erro) {
+    console.error("Erro ao iniciar etapa:", erro);
+    msg.textContent = "❌ Erro ao iniciar: " + erro.message;
+    msg.className = "msg-iniciar erro-msg";
+    botao.disabled = false;
+  }
 }
 
 // ----------------------------------------------------------
