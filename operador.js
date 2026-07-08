@@ -51,11 +51,35 @@ let opsCarregadas = [];
 let opAberta = null;
 let assinaturaCtx = null;
 let assinaturaVazia = true;
-let cronoAutosave = null;   // controla o "espera 1 segundo" do autosave
+let cronoAutosave = null;
 
-// ----------------------------------------------------------
+// ==========================================================
+//  Janela de confirmação (modal do site)
+// ==========================================================
+const modal = document.getElementById("modal-confirmar");
+const modalTexto = document.getElementById("modal-texto");
+const modalCancelar = document.getElementById("modal-cancelar");
+const modalConfirmarBtn = document.getElementById("modal-confirmar-btn");
+let acaoConfirmar = null;
+
+function confirmar(texto, aoConfirmar) {
+  modalTexto.textContent = texto;
+  acaoConfirmar = aoConfirmar;
+  modal.style.display = "flex";
+}
+function fecharModal() {
+  modal.style.display = "none";
+  acaoConfirmar = null;
+}
+modalCancelar.addEventListener("click", fecharModal);
+modalConfirmarBtn.addEventListener("click", function () {
+  if (acaoConfirmar) acaoConfirmar();
+  fecharModal();
+});
+
+// ==========================================================
 //  Escuta as OPs ativas
-// ----------------------------------------------------------
+// ==========================================================
 const consulta = query(
   collection(db, "ordens_producao"),
   where("status", "==", "ativa"),
@@ -69,16 +93,15 @@ onSnapshot(consulta, function (resultado) {
     dados._id = documento.id;
     opsCarregadas.push(dados);
   });
-  // Só remonta a lista se ela estiver visível (não atrapalha quem está apontando)
   if (telaLista.style.display !== "none") montarLista(opsCarregadas);
 }, function (erro) {
   console.error("Erro ao carregar OPs:", erro);
   listaOps.innerHTML = "<p class='erro'>Não foi possível carregar as OPs. Tente atualizar a página.</p>";
 });
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Lista
-// ----------------------------------------------------------
+// ==========================================================
 function montarLista(ops) {
   if (ops.length === 0) {
     listaOps.innerHTML = "";
@@ -121,22 +144,20 @@ function montarLista(ops) {
   });
 }
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Abrir OP
-// ----------------------------------------------------------
+// ==========================================================
 function abrirOP(op) {
   opAberta = op;
   const etapa = etapaAtualDa(op);
 
   if (etapa && etapa.status === "em_producao") {
-    // já assumida → vai direto para o apontamento
     fichaOp.innerHTML = montarFicha(op) + montarApontamento(op);
     telaLista.style.display = "none";
     telaOp.style.display = "block";
     window.scrollTo(0, 0);
     ligarApontamento();
   } else {
-    // livre → identificação
     fichaOp.innerHTML = montarFicha(op);
     telaLista.style.display = "none";
     telaOp.style.display = "block";
@@ -158,9 +179,9 @@ function voltarParaLista() {
   window.scrollTo(0, 0);
 }
 
-// ----------------------------------------------------------
-//  Ficha da OP (dados) + identificação (se etapa livre)
-// ----------------------------------------------------------
+// ==========================================================
+//  Ficha (dados) + identificação (se etapa livre)
+// ==========================================================
 function montarFicha(op) {
   const etapa = etapaAtualDa(op);
   let html = "";
@@ -205,7 +226,6 @@ function montarFicha(op) {
     html += "</table></div>";
   }
 
-  // Identificação só quando a etapa está livre
   if (!(etapa && etapa.status === "em_producao")) {
     html += "<div class='cartao cartao-identificacao'>";
     html += "  <h3>Identificação do operador</h3>";
@@ -222,15 +242,14 @@ function montarFicha(op) {
   return html;
 }
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Tela 2 — Apontamento
-// ----------------------------------------------------------
+// ==========================================================
 function montarApontamento(op) {
   const etapa = etapaAtualDa(op);
   const ap = etapa.apontamentos || {};
   let html = "";
 
-  // Resumo da peça + operador
   html += "<div class='cartao cartao-apontamento'>";
   html += "  <h3>Apontamento — " + (etapa.operacao || "etapa") + "</h3>";
   html += "  <div class='resumo-peca'>";
@@ -241,20 +260,17 @@ function montarApontamento(op) {
   html += "    <span><strong>Operador:</strong> " + (etapa.operadorNome || "—") + "</span>";
   html += "  </div>";
 
-  // Início do processo
   html += "  <div class='linha-inicio'>";
   html += "    <button id='btn-iniciar-processo' class='botao-iniciar-processo'>Iniciar processo</button>";
   html += "    <div class='campo-hora'><label>Hora de início</label>";
   html += "      <input type='time' id='hora-inicio' value='" + (ap.horaInicio || "") + "'></div>";
   html += "  </div>";
 
-  // Fim + quantidade
   html += "  <div class='grade-apontamento'>";
   html += "    <div class='campo-ap'><label>Hora de fim</label><input type='time' id='hora-fim' value='" + (ap.horaFim || "") + "'></div>";
   html += "    <div class='campo-ap'><label>Qtde produzida</label><input type='number' id='qtde-produzida' value='" + (ap.qtdeProduzida || "") + "' min='0'></div>";
   html += "  </div>";
 
-  // Perdas
   html += "  <div class='bloco-perda'>";
   html += "    <div class='grade-apontamento'>";
   html += "      <div class='campo-ap'><label>Perdas (qtde)</label><input type='number' id='qtde-perda' value='" + (ap.qtdePerda || "") + "' min='0'></div>";
@@ -262,23 +278,20 @@ function montarApontamento(op) {
   html += "    </div>";
   html += "  </div>";
 
-  // Paradas
   html += "  <div class='bloco-paradas'>";
   html += "    <div class='paradas-topo'><label>Paradas</label>";
   html += "      <button id='btn-add-parada' class='botao-add-parada'>+ Adicionar parada</button></div>";
   html += "    <div id='lista-paradas'></div>";
   html += "  </div>";
 
-  // Aviso de autosave
   html += "  <p id='aviso-autosave' class='aviso-autosave'></p>";
-
   html += "</div>";
   return html;
 }
 
-// Monta o <select> de motivos
 function selectMotivos(id, lista, selecionado) {
-  let s = "<select id='" + id + "'><option value=''>Selecionar…</option>";
+  const idAttr = id ? " id='" + id + "'" : "";
+  let s = "<select" + idAttr + "><option value=''>Selecionar…</option>";
   lista.forEach(function (m) {
     const sel = (selecionado === m[0]) ? " selected" : "";
     s += "<option value='" + m[0] + "'" + sel + ">" + m[0] + " — " + m[1] + "</option>";
@@ -287,14 +300,13 @@ function selectMotivos(id, lista, selecionado) {
   return s;
 }
 
-// ----------------------------------------------------------
-//  Liga os eventos da Tela 2 (após montar)
-// ----------------------------------------------------------
+// ==========================================================
+//  Liga os eventos da Tela 2
+// ==========================================================
 function ligarApontamento() {
   const etapa = etapaAtualDa(opAberta);
   const ap = etapa.apontamentos || {};
 
-  // Botão iniciar processo (preenche a hora, mas o campo continua editável)
   document.getElementById("btn-iniciar-processo").addEventListener("click", function () {
     const agora = new Date();
     const hh = String(agora.getHours()).padStart(2, "0");
@@ -303,14 +315,12 @@ function ligarApontamento() {
     agendarAutosave();
   });
 
-  // Autosave em qualquer mudança dos campos
   ["hora-inicio", "hora-fim", "qtde-produzida", "qtde-perda", "motivo-perda"].forEach(function (id) {
     const el = document.getElementById(id);
     el.addEventListener("input", agendarAutosave);
     el.addEventListener("change", agendarAutosave);
   });
 
-  // Paradas já salvas
   const paradas = ap.paradas || [];
   paradas.forEach(function (p) { adicionarParada(p); });
 
@@ -320,7 +330,6 @@ function ligarApontamento() {
   });
 }
 
-// Adiciona uma linha de parada na tela
 function adicionarParada(dados) {
   const container = document.getElementById("lista-paradas");
   const div = document.createElement("div");
@@ -331,31 +340,27 @@ function adicionarParada(dados) {
     "<div class='campo-ap campo-ap-largo'><label>Motivo</label>" + selectMotivos("", MOTIVOS_PARADA, dados && dados.motivo) + "</div>" +
     "<button class='botao-remover-parada' title='Remover parada'>×</button>";
 
-  // autosave nos campos da parada
   div.querySelectorAll("input, select").forEach(function (el) {
     el.addEventListener("input", agendarAutosave);
     el.addEventListener("change", agendarAutosave);
   });
 
-  // remover com confirmação
   div.querySelector(".botao-remover-parada").addEventListener("click", function () {
-    const confirmar = confirm("Tem certeza que deseja apagar esta parada?");
-    if (confirmar) {
+    confirmar("Tem certeza que deseja apagar esta parada?", function () {
       div.remove();
       agendarAutosave();
-    }
+    });
   });
 
   container.appendChild(div);
 }
 
-// ----------------------------------------------------------
-//  Autosave (espera ~1s após parar de digitar)
-// ----------------------------------------------------------
+// ==========================================================
+//  Autosave
+// ==========================================================
 function agendarAutosave() {
   const aviso = document.getElementById("aviso-autosave");
   if (aviso) { aviso.textContent = "salvando…"; aviso.className = "aviso-autosave salvando"; }
-
   if (cronoAutosave) clearTimeout(cronoAutosave);
   cronoAutosave = setTimeout(salvarApontamento, 1000);
 }
@@ -363,7 +368,6 @@ function agendarAutosave() {
 async function salvarApontamento() {
   const aviso = document.getElementById("aviso-autosave");
   try {
-    // Coleta os campos
     const paradas = [];
     document.querySelectorAll("#lista-paradas .linha-parada").forEach(function (linha) {
       paradas.push({
@@ -388,7 +392,6 @@ async function salvarApontamento() {
     const dados = atual.data();
     const indiceEtapa = (dados.etapaAtual || 1) - 1;
 
-    // Registra o horário de início do processo na primeira vez que for preenchido
     if (apontamento.horaInicio && !dados.etapas[indiceEtapa].horarioInicioProcesso) {
       dados.etapas[indiceEtapa].horarioInicioProcesso = new Date().toISOString();
     }
@@ -403,9 +406,9 @@ async function salvarApontamento() {
   }
 }
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Assinatura
-// ----------------------------------------------------------
+// ==========================================================
 function prepararAssinatura() {
   const canvas = document.getElementById("quadro-assinatura");
   const largura = canvas.offsetWidth;
@@ -443,9 +446,9 @@ function limparAssinatura() {
   assinaturaVazia = true;
 }
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Iniciar etapa
-// ----------------------------------------------------------
+// ==========================================================
 async function iniciarEtapa() {
   const botao = document.getElementById("btn-iniciar-etapa");
   const msg = document.getElementById("msg-iniciar");
@@ -483,7 +486,6 @@ async function iniciarEtapa() {
     dados.etapas[indiceEtapa] = etapa;
     await updateDoc(referencia, { etapas: dados.etapas });
 
-    // Recarrega já na Tela 2 (apontamento)
     opAberta = dados;
     opAberta._id = referencia.id;
     fichaOp.innerHTML = montarFicha(opAberta) + montarApontamento(opAberta);
@@ -497,9 +499,9 @@ async function iniciarEtapa() {
   }
 }
 
-// ----------------------------------------------------------
+// ==========================================================
 //  Auxiliares
-// ----------------------------------------------------------
+// ==========================================================
 function etapaAtualDa(op) {
   if (!op.etapas || op.etapas.length === 0) return null;
   const indice = (op.etapaAtual || 1) - 1;
