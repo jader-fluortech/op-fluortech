@@ -1,5 +1,5 @@
 /* ==========================================================
-   Visual da tela do operador (lista de OPs)
+   Visual da tela do operador (lista de OPs + OP aberta)
    Pensado para tablet: cartões grandes e status claro.
    ========================================================== */
 
@@ -29,14 +29,22 @@
   padding: 20px;
   border-left: 6px solid #9aa5b1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.05s;
 }
 
-/* OP disponível: destaque verde */
+.op-card:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.op-card:active {
+  transform: scale(0.995);
+}
+
 .op-card.disponivel {
   border-left-color: #0b7a3b;
 }
 
-/* OP ocupada: destaque laranja/cinza, um pouco mais apagada */
 .op-card.ocupada {
   border-left-color: #f0a500;
   background-color: #fbfbf9;
@@ -57,7 +65,6 @@
   color: #1f2933;
 }
 
-/* Etiqueta de status */
 .status-disponivel,
 .status-ocupada {
   font-size: 13px;
@@ -103,7 +110,6 @@
   color: #0b4f6c;
 }
 
-/* Mensagem de lista vazia */
 .lista-vazia {
   text-align: center;
   color: #7b8794;
@@ -112,4 +118,43 @@
   background-color: #ffffff;
   border: 1px dashed #cbd2d9;
   border-radius: 12px;
+}
+
+/* ===== OP aberta (ficha completa) ===== */
+.botao-voltar {
+  background-color: transparent;
+  border: 1px solid #cbd2d9;
+  color: #0b4f6c;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.botao-voltar:hover {
+  background-color: #eef1f4;
+}
+
+.op-aberta-cabecalho {
+  background-color: #0b4f6c;
+  color: #ffffff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.op-aberta-cabecalho h2 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.op-aberta-cabecalho p {
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+.op-aberta-cabecalho strong {
+  color: #ffd78a;
 }
