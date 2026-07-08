@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operador — Projeto OP Fluortech</title>
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="operador.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>Projeto OP — Operador</h1>
+    <span class="ambiente" id="ambiente">ambiente de teste</span>
+  </header>
+
+  <main class="conteudo">
+    <h2 class="titulo-operador">Ordens de Produção ativas</h2>
+    <p class="subtitulo-operador">Selecione a OP indicada pelo líder da sua área.</p>
+
+    <div id="lista-ops" class="lista-ops"></div>
+
+    <p id="lista-vazia" class="lista-vazia" style="display:none;">
+      Nenhuma Ordem de Produção ativa no momento.
+    </p>
+  </main>
+
+  <footer class="rodape">
+    <small>Sistema interno de acompanhamento de Ordens de Produção</small>
+  </footer>
+
+  <script type="module" src="operador.js"></script>
+
+</body>
+</html>
