@@ -143,6 +143,16 @@
 .aviso-autosave.salvo { color: #0b7a3b; }
 .aviso-autosave.erro-salvar { color: #b3261e; }
 
+/* ===== Botão finalizar ===== */
+.botao-finalizar {
+  display: block; width: 100%; margin-top: 20px; padding: 18px;
+  background-color: #0b4f6c; color: #fff; border: none; border-radius: 8px;
+  font-size: 17px; font-weight: 700; cursor: pointer;
+}
+.botao-finalizar:hover { background-color: #0a4459; }
+.botao-finalizar:disabled { background-color: #9aa5b1; cursor: default; }
+.msg-finalizar { margin-top: 14px; font-size: 15px; text-align: center; min-height: 20px; line-height: 1.5; }
+
 /* ===== Janela de confirmação (modal) ===== */
 .modal-fundo {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
