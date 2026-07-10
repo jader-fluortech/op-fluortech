@@ -32,36 +32,43 @@
       </div>
     </section>
 
-    <!-- ÁREA DO PCP (só aparece depois do login) -->
+    <!-- ÁREA DO PCP -->
     <section id="area-pcp" style="display:none;">
-      <p id="status-conexao" class="status">Iniciando sistema…</p>
 
-      <!-- Quadro de upload de nova OP -->
-      <section class="area-importar">
-        <h2>Importar Ordem de Produção</h2>
-        <label for="arquivo-op" class="rotulo-upload">
-          Carregue aqui a Ordem de Produção (OP)
-        </label>
-        <input type="file" id="arquivo-op" accept=".txt">
-        <pre id="conteudo-op" class="conteudo-op"></pre>
-      </section>
+      <!-- PAINEL PRINCIPAL (upload + lista) -->
+      <div id="pcp-principal">
+        <p id="status-conexao" class="status">Iniciando sistema…</p>
 
-      <!-- Lista de todas as OPs -->
-      <section class="area-lista-pcp">
-        <h2>Ordens de Produção</h2>
+        <section class="area-importar">
+          <h2>Importar Ordem de Produção</h2>
+          <label for="arquivo-op" class="rotulo-upload">
+            Carregue aqui a Ordem de Produção (OP)
+          </label>
+          <input type="file" id="arquivo-op" accept=".txt">
+          <pre id="conteudo-op" class="conteudo-op"></pre>
+        </section>
 
-        <div class="grupo-pcp">
-          <h3 class="titulo-grupo">Aguardando o primeiro operador</h3>
-          <div id="lista-nao-iniciadas" class="lista-pcp"></div>
-          <p id="vazio-nao-iniciadas" class="vazio-grupo" style="display:none;">Nenhuma OP aguardando início.</p>
-        </div>
+        <section class="area-lista-pcp">
+          <h2>Ordens de Produção</h2>
+          <div class="grupo-pcp">
+            <h3 class="titulo-grupo">Aguardando o primeiro operador</h3>
+            <div id="lista-nao-iniciadas" class="lista-pcp"></div>
+            <p id="vazio-nao-iniciadas" class="vazio-grupo" style="display:none;">Nenhuma OP aguardando início.</p>
+          </div>
+          <div class="grupo-pcp">
+            <h3 class="titulo-grupo">Em andamento e finalizadas</h3>
+            <div id="lista-geral" class="lista-pcp"></div>
+            <p id="vazio-geral" class="vazio-grupo" style="display:none;">Nenhuma OP em andamento ou finalizada.</p>
+          </div>
+        </section>
+      </div>
 
-        <div class="grupo-pcp">
-          <h3 class="titulo-grupo">Em andamento e finalizadas</h3>
-          <div id="lista-geral" class="lista-pcp"></div>
-          <p id="vazio-geral" class="vazio-grupo" style="display:none;">Nenhuma OP em andamento ou finalizada.</p>
-        </div>
-      </section>
+      <!-- PAINEL DE RESUMO DA OP (escondido até clicar num card) -->
+      <div id="pcp-resumo" style="display:none;">
+        <button id="btn-voltar-pcp" class="botao-voltar">← Voltar para a lista</button>
+        <div id="conteudo-resumo"></div>
+      </div>
+
     </section>
 
   </main>
