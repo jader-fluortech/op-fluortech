@@ -10,12 +10,10 @@ body {
 /* ===== Cabeçalho ===== */
 .cabecalho {
   background-color: #0b4f6c; color: #ffffff; padding: 20px 24px;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
 }
 .cabecalho h1 { font-size: 20px; font-weight: 600; }
 .cabecalho-direita { display: flex; align-items: center; gap: 12px; }
-
 .ambiente {
   background-color: #f0a500; color: #1f2933; font-size: 12px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 12px;
@@ -28,13 +26,12 @@ body {
 
 /* ===== Conteúdo ===== */
 .conteudo { flex: 1; padding: 24px; max-width: 900px; width: 100%; margin: 0 auto; }
-
 .status {
   font-size: 15px; color: #52606d; background-color: #ffffff; padding: 12px 20px;
   border-radius: 8px; border: 1px solid #e1e5ea; text-align: center; margin-bottom: 24px;
 }
 
-/* ===== Tela de login ===== */
+/* ===== Login ===== */
 .tela-login { display: flex; justify-content: center; align-items: flex-start; padding-top: 40px; }
 .cartao-login {
   background-color: #ffffff; border: 1px solid #e1e5ea; border-radius: 10px;
@@ -55,7 +52,7 @@ body {
 .erro-msg { color: #b3261e; }
 .sucesso-msg { color: #0b7a3b; }
 
-/* ===== Área de importar ===== */
+/* ===== Importar ===== */
 .area-importar h2 { font-size: 18px; margin-bottom: 12px; color: #0b4f6c; }
 .rotulo-upload { display: block; font-weight: 600; margin-bottom: 8px; }
 #arquivo-op {
@@ -63,7 +60,7 @@ body {
   border: 1px dashed #9aa5b1; border-radius: 8px; width: 100%; cursor: pointer;
 }
 
-/* ===== Cartões (ficha de OP importada) ===== */
+/* ===== Cartões ===== */
 .cartao {
   background-color: #ffffff; border: 1px solid #e1e5ea; border-radius: 10px;
   padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -91,6 +88,7 @@ body {
 }
 .recurso { font-size: 13px; color: #7b8794; }
 .erro { color: #b3261e; background-color: #fdecea; padding: 12px; border-radius: 8px; }
+.texto-vazio { color: #9aa5b1; font-size: 14px; font-style: italic; }
 
 /* ===== Botão salvar OP ===== */
 .area-salvar { margin-top: 20px; text-align: center; }
@@ -105,7 +103,6 @@ body {
 /* ===== Lista do PCP ===== */
 .area-lista-pcp { margin-top: 32px; }
 .area-lista-pcp > h2 { font-size: 18px; color: #0b4f6c; margin-bottom: 16px; }
-
 .grupo-pcp { margin-bottom: 28px; }
 .titulo-grupo {
   font-size: 14px; color: #52606d; text-transform: uppercase; letter-spacing: 0.4px;
@@ -116,35 +113,67 @@ body {
   background-color: #ffffff; border: 1px dashed #cbd2d9; border-radius: 10px;
 }
 .lista-pcp { display: flex; flex-direction: column; gap: 12px; }
-
 .card-pcp {
   background-color: #ffffff; border: 1px solid #e1e5ea; border-radius: 10px;
   padding: 16px 18px; border-left: 5px solid #9aa5b1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  cursor: pointer; transition: box-shadow 0.15s, transform 0.05s;
 }
+.card-pcp:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+.card-pcp:active { transform: scale(0.996); }
 .card-pcp.st-ativa { border-left-color: #0b4f6c; }
 .card-pcp.st-aguardando { border-left-color: #f0a500; background-color: #fffdf7; }
 .card-pcp.st-finalizada { border-left-color: #0b7a3b; }
-
 .card-pcp-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .card-pcp .op-numero { font-size: 16px; font-weight: 700; color: #1f2933; }
 
-.selo-status {
-  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 14px; white-space: nowrap;
-}
+.selo-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 14px; white-space: nowrap; }
 .selo-livre { background-color: #e3f4ea; color: #0b7a3b; }
 .selo-producao { background-color: #fdf0d5; color: #9a6700; }
 .selo-aguardando { background-color: #fdecdf; color: #b25600; }
 .selo-finalizada { background-color: #e6e9ed; color: #52606d; }
+.selo-pendente { background-color: #eef1f4; color: #9aa5b1; }
 
 .card-pcp-corpo .op-cliente { font-size: 14px; font-weight: 600; color: #1f2933; margin-bottom: 2px; }
 .card-pcp-corpo .op-peca { font-size: 13px; color: #52606d; margin-bottom: 8px; }
 .card-pcp-rodape { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: #7b8794; }
 
-/* ===== Rodapé ===== */
-.rodape {
-  text-align: center; padding: 16px; color: #9aa5b1;
-  border-top: 1px solid #e1e5ea; margin-top: auto;
+/* ===== Resumo da OP (PCP) ===== */
+.botao-voltar {
+  background-color: transparent; border: 1px solid #cbd2d9; color: #0b4f6c;
+  padding: 10px 18px; border-radius: 8px; font-size: 15px; font-weight: 600;
+  cursor: pointer; margin-bottom: 20px;
 }
+.botao-voltar:hover { background-color: #eef1f4; }
+.op-aberta-cabecalho {
+  background-color: #0b4f6c; color: #ffffff; padding: 20px 24px; border-radius: 12px; margin-bottom: 20px;
+}
+.op-aberta-cabecalho h2 { font-size: 22px; margin-bottom: 4px; }
+.op-aberta-cabecalho p { font-size: 14px; opacity: 0.9; }
+
+.etapa-resumo {
+  background-color: #f8f9fb; border: 1px solid #eef1f4; border-radius: 8px;
+  padding: 16px; margin-bottom: 14px;
+}
+.etapa-resumo-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.etapa-nome { font-size: 15px; font-weight: 700; color: #0b4f6c; }
+.etapa-recurso { display: block; font-size: 13px; color: #7b8794; margin-top: 2px; margin-bottom: 12px; }
+.etapa-campos { margin-bottom: 12px; }
+.etapa-subtitulo { display: block; font-size: 12px; font-weight: 600; color: #52606d; text-transform: uppercase; letter-spacing: 0.3px; margin: 8px 0 6px; }
+.etapa-paradas { border-top: 1px dashed #d7dce1; padding-top: 10px; margin-top: 4px; }
+.parada-resumo { font-size: 13px; color: #52606d; padding: 4px 0; }
+
+.btn-assinatura {
+  margin-top: 8px; background-color: #eef1f4; border: 1px solid #cbd2d9; color: #0b4f6c;
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-assinatura:hover { background-color: #e1e5ea; }
+.assinatura-img { margin-top: 10px; }
+.assinatura-img img {
+  max-width: 300px; width: 100%; border: 1px solid #e1e5ea; border-radius: 8px; background-color: #ffffff;
+}
+
+/* ===== Rodapé ===== */
+.rodape { text-align: center; padding: 16px; color: #9aa5b1; border-top: 1px solid #e1e5ea; margin-top: auto; }
 
 /* ===== Responsivo ===== */
 @media (max-width: 600px) { .campos { grid-template-columns: 1fr; } }
