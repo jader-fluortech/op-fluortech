@@ -294,18 +294,21 @@ function coletarApontamento() {
   };
 }
 
-// Verifica se HÁ algum campo em branco na tela (todos os campos)
-function temCampoEmBranco(ap) {
-  if (!ap.horaInicio) return true;
-  if (!ap.horaFim) return true;
-  if (!ap.qtdeProduzida) return true;
-  if (!ap.qtdePerda) return true;
-  if (!ap.motivoPerda) return true;
-  for (let i = 0; i < ap.paradas.length; i++) {
-    const p = ap.paradas[i];
-    if (!p.inicio || !p.fim || !p.motivo) return true;
-  }
-  return false;
+// Retorna a LISTA de nomes dos campos em branco (vazia = tudo preenchido)
+function camposEmBranco(ap) {
+  const faltando = [];
+  if (!ap.horaInicio) faltando.push("Hora de início");
+  if (!ap.horaFim) faltando.push("Hora de fim");
+  if (!ap.qtdeProduzida) faltando.push("Qtde produzida");
+  if (!ap.qtdePerda) faltando.push("Perdas (qtde)");
+  if (!ap.motivoPerda) faltando.push("Motivo da perda");
+  ap.paradas.forEach(function (p, i) {
+    const n = i + 1;
+    if (!p.inicio) faltando.push("Parada " + n + ": início");
+    if (!p.fim) faltando.push("Parada " + n + ": fim");
+    if (!p.motivo) faltando.push("Parada " + n + ": motivo");
+  });
+  return faltando;
 }
 
 async function salvarApontamento() {
@@ -332,7 +335,7 @@ function finalizarEtapa() {
   const msg = document.getElementById("msg-finalizar");
   const ap = coletarApontamento();
 
-  // Bloqueio: hora de início é obrigatória
+  // Bloqueio: hora de início obrigatória
   if (!ap.horaInicio) {
     msg.textContent = "É necessário informar ao menos a hora de início antes de finalizar.";
     msg.className = "msg-finalizar erro-msg";
@@ -342,9 +345,11 @@ function finalizarEtapa() {
   const ultimaEtapa = (opAberta.etapaAtual || 1) >= (opAberta.etapas ? opAberta.etapas.length : 1);
   const acao = ultimaEtapa ? "encerrar e enviar para o PCP" : "finalizar e enviar para a próxima etapa";
 
-  // Aviso: se houver QUALQUER campo em branco
-  if (temCampoEmBranco(ap)) {
-    confirmar("Há campos em branco no apontamento. Deseja " + acao + " mesmo assim?", executarFinalizacao);
+  // Aviso: lista os campos em branco
+  const faltando = camposEmBranco(ap);
+  if (faltando.length > 0) {
+    const lista = faltando.join(", ");
+    confirmar("Os seguintes campos estão em branco:\n\n" + lista + "\n\nDeseja " + acao + " mesmo assim?", executarFinalizacao);
   } else {
     confirmar("Deseja " + acao + "?", executarFinalizacao);
   }
