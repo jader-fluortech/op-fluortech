@@ -294,7 +294,6 @@ function coletarApontamento() {
   };
 }
 
-// Retorna a LISTA de nomes dos campos em branco (vazia = tudo preenchido)
 function camposEmBranco(ap) {
   const faltando = [];
   if (!ap.horaInicio) faltando.push("Hora de início");
@@ -335,7 +334,6 @@ function finalizarEtapa() {
   const msg = document.getElementById("msg-finalizar");
   const ap = coletarApontamento();
 
-  // Bloqueio: hora de início obrigatória
   if (!ap.horaInicio) {
     msg.textContent = "É necessário informar ao menos a hora de início antes de finalizar.";
     msg.className = "msg-finalizar erro-msg";
@@ -345,10 +343,9 @@ function finalizarEtapa() {
   const ultimaEtapa = (opAberta.etapaAtual || 1) >= (opAberta.etapas ? opAberta.etapas.length : 1);
   const acao = ultimaEtapa ? "encerrar e enviar para o PCP" : "finalizar e enviar para a próxima etapa";
 
-  // Aviso: lista os campos em branco
   const faltando = camposEmBranco(ap);
   if (faltando.length > 0) {
-    const lista = faltando.join(", ");
+    const lista = faltando.map(function (item) { return "• " + item; }).join("\n") + ".";
     confirmar("Os seguintes campos estão em branco:\n\n" + lista + "\n\nDeseja " + acao + " mesmo assim?", executarFinalizacao);
   } else {
     confirmar("Deseja " + acao + "?", executarFinalizacao);
