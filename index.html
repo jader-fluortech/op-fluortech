@@ -79,8 +79,44 @@
               <span class="seta-grupo">▸</span>
             </button>
             <div class="conteudo-grupo" id="wrap-arquivadas" style="display:none;">
+
+              <!-- Filtros das arquivadas -->
+              <div class="filtros-arquivadas">
+                <div class="filtro-linha">
+                  <div class="filtro-campo">
+                    <label for="filtro-numero">Número da OP</label>
+                    <input type="text" id="filtro-numero" placeholder="Ex.: 01659301001">
+                  </div>
+                  <div class="filtro-campo">
+                    <label for="filtro-cliente">Cliente</label>
+                    <input type="text" id="filtro-cliente" placeholder="Ex.: Chesterton">
+                  </div>
+                </div>
+                <div class="filtro-linha">
+                  <div class="filtro-campo">
+                    <label for="filtro-peca">Peça</label>
+                    <input type="text" id="filtro-peca" placeholder="Ex.: Tubo PTFE">
+                  </div>
+                </div>
+                <div class="filtro-linha">
+                  <div class="filtro-campo">
+                    <label for="filtro-data-de">Arquivada de</label>
+                    <input type="date" id="filtro-data-de">
+                  </div>
+                  <div class="filtro-campo">
+                    <label for="filtro-data-ate">Arquivada até</label>
+                    <input type="date" id="filtro-data-ate">
+                  </div>
+                </div>
+                <div class="filtro-botoes">
+                  <button id="btn-buscar-arquivadas" class="botao-buscar">Buscar</button>
+                  <button id="btn-limpar-arquivadas" class="botao-limpar-filtro">Limpar</button>
+                </div>
+                <p id="msg-filtro" class="msg-filtro"></p>
+              </div>
+
               <div id="lista-arquivadas" class="lista-pcp"></div>
-              <p id="vazio-arquivadas" class="vazio-grupo" style="display:none;">Nenhuma OP arquivada.</p>
+              <p id="vazio-arquivadas" class="vazio-grupo" style="display:none;">Nenhuma OP arquivada encontrada para esse filtro.</p>
             </div>
           </div>
         </section>
