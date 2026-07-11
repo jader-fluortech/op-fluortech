@@ -113,6 +113,19 @@
 
     </section>
 
+    <!-- MODAL DE IMPORTAÇÃO DE OP -->
+    <div id="modal-importar" class="modal-fundo" style="display:none;">
+      <div class="modal-caixa modal-importar-caixa">
+        <div class="modal-importar-topo">
+          <h2>Importar Ordem de Produção</h2>
+          <button id="btn-fechar-importar" class="modal-fechar">×</button>
+        </div>
+        <label for="arquivo-op" class="rotulo-upload">Carregue aqui a Ordem de Produção (OP)</label>
+        <input type="file" id="arquivo-op" accept=".txt">
+        <div id="conteudo-op" class="conteudo-op"></div>
+      </div>
+    </div>
+
   </main>
 
   <footer class="rodape">
