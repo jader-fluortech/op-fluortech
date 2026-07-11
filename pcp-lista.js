@@ -1,5 +1,5 @@
 // ==========================================================
-//  Lista de OPs no PCP + resumo completo + ação de arquivar
+//  Lista de OPs no PCP — 3 grupos, recolher/expandir, resumo, arquivar
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -25,8 +25,10 @@ const MOTIVOS_PERDA = {
 
 const listaNaoIniciadas = document.getElementById("lista-nao-iniciadas");
 const vazioNaoIniciadas = document.getElementById("vazio-nao-iniciadas");
-const listaGeral = document.getElementById("lista-geral");
-const vazioGeral = document.getElementById("vazio-geral");
+const listaEmAndamento = document.getElementById("lista-em-andamento");
+const vazioEmAndamento = document.getElementById("vazio-em-andamento");
+const listaArquivadas = document.getElementById("lista-arquivadas");
+const vazioArquivadas = document.getElementById("vazio-arquivadas");
 
 const pcpPrincipal = document.getElementById("pcp-principal");
 const pcpResumo = document.getElementById("pcp-resumo");
@@ -36,7 +38,25 @@ const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 let opsCarregadas = [];
 let opNoResumo = null;
 
-// ---- Janela de confirmação (criada dinamicamente) ----
+// ---- Recolher/expandir seções ----
+document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
+  botao.addEventListener("click", function () {
+    const alvo = document.getElementById("wrap-" + botao.getAttribute("data-alvo").replace("lista-", ""));
+    const seta = botao.querySelector(".seta-grupo");
+    const recolhido = botao.classList.toggle("recolhido");
+    if (recolhido) {
+      alvo.style.display = "none";
+      seta.textContent = "▸";
+      botao.setAttribute("aria-expanded", "false");
+    } else {
+      alvo.style.display = "block";
+      seta.textContent = "▾";
+      botao.setAttribute("aria-expanded", "true");
+    }
+  });
+});
+
+// ---- Janela de confirmação ----
 let modalPcp, modalPcpTexto, modalPcpCancelar, modalPcpConfirmar, acaoConfirmarPcp;
 function prepararModal() {
   modalPcp = document.createElement("div");
@@ -75,35 +95,58 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   if (pcpResumo.style.display === "none") montarListas(opsCarregadas);
 }, function (erro) {
   console.error("Erro ao carregar OPs (PCP):", erro);
-  listaGeral.innerHTML = "<p class='erro'>Não foi possível carregar as OPs.</p>";
+  listaEmAndamento.innerHTML = "<p class='erro'>Não foi possível carregar as OPs.</p>";
 });
 
 function montarListas(ops) {
   const naoIniciadas = [];
-  const geral = [];
+  const emAndamento = [];
+  const arquivadas = [];
+
   ops.forEach(function (op) {
-    if (dataAberturaOP(op)) geral.push(op); else naoIniciadas.push(op);
+    if (op.status === "finalizada_arquivada") {
+      arquivadas.push(op);
+    } else if (dataAberturaOP(op)) {
+      emAndamento.push(op);
+    } else {
+      naoIniciadas.push(op);
+    }
   });
+
   naoIniciadas.sort(function (a, b) { return textoData(b.importadaEm) - textoData(a.importadaEm); });
-  geral.sort(function (a, b) { return textoData(dataAberturaOP(b)) - textoData(dataAberturaOP(a)); });
-  renderizarGrupo(listaNaoIniciadas, vazioNaoIniciadas, naoIniciadas);
-  renderizarGrupo(listaGeral, vazioGeral, geral);
+  emAndamento.sort(function (a, b) { return textoData(dataAberturaOP(b)) - textoData(dataAberturaOP(a)); });
+  arquivadas.sort(function (a, b) { return textoData(b.arquivadaEm) - textoData(a.arquivadaEm); });
+
+  renderizarGrupo(listaNaoIniciadas, vazioNaoIniciadas, naoIniciadas, false);
+  renderizarGrupo(listaEmAndamento, vazioEmAndamento, emAndamento, false);
+  renderizarGrupo(listaArquivadas, vazioArquivadas, arquivadas, true);
 }
 
-function renderizarGrupo(container, elementoVazio, ops) {
+// enxuto = true → card compacto (arquivadas)
+function renderizarGrupo(container, elementoVazio, ops, enxuto) {
   if (ops.length === 0) { container.innerHTML = ""; elementoVazio.style.display = "block"; return; }
   elementoVazio.style.display = "none";
   let html = "";
   ops.forEach(function (op) {
-    const info = statusDaOP(op);
-    html += "<div class='card-pcp " + info.classe + "' data-id='" + op._id + "'>";
-    html += "<div class='card-pcp-topo'><span class='op-numero'>OP " + (op.numero || "—") + "</span>";
-    html += "<span class='selo-status " + info.selo + "'>" + info.texto + "</span></div>";
-    html += "<div class='card-pcp-corpo'><p class='op-cliente'>" + (op.cliente || "—") + "</p>";
-    html += "<p class='op-peca'>" + (op.descricao || op.produto || "—") + "</p>";
-    html += "<div class='card-pcp-rodape'><span>Importada: " + formatarDataHora(op.importadaEm) + "</span>";
-    if (dataAberturaOP(op)) html += "<span>1ª abertura: " + formatarDataHora(dataAberturaOP(op)) + "</span>";
-    html += "</div></div></div>";
+    if (enxuto) {
+      html += "<div class='card-pcp card-arquivado' data-id='" + op._id + "'>";
+      html += "<div class='card-arquivado-linha'>";
+      html += "<span class='op-numero'>OP " + (op.numero || "—") + "</span>";
+      html += "<span class='arquivado-data'>Arquivada: " + formatarDataHora(op.arquivadaEm) + "</span></div>";
+      html += "<p class='op-cliente'>" + (op.cliente || "—") + "</p>";
+      html += "<p class='op-peca'>" + (op.descricao || op.produto || "—") + "</p>";
+      html += "</div>";
+    } else {
+      const info = statusDaOP(op);
+      html += "<div class='card-pcp " + info.classe + "' data-id='" + op._id + "'>";
+      html += "<div class='card-pcp-topo'><span class='op-numero'>OP " + (op.numero || "—") + "</span>";
+      html += "<span class='selo-status " + info.selo + "'>" + info.texto + "</span></div>";
+      html += "<div class='card-pcp-corpo'><p class='op-cliente'>" + (op.cliente || "—") + "</p>";
+      html += "<p class='op-peca'>" + (op.descricao || op.produto || "—") + "</p>";
+      html += "<div class='card-pcp-rodape'><span>Importada: " + formatarDataHora(op.importadaEm) + "</span>";
+      if (dataAberturaOP(op)) html += "<span>1ª abertura: " + formatarDataHora(dataAberturaOP(op)) + "</span>";
+      html += "</div></div></div>";
+    }
   });
   container.innerHTML = html;
 
@@ -130,7 +173,6 @@ function abrirResumo(op) {
     });
   });
 
-  // Botão arquivar (só quando aguardando PCP)
   const btnArquivar = document.getElementById("btn-arquivar");
   if (btnArquivar) {
     btnArquivar.addEventListener("click", function () {
@@ -148,33 +190,21 @@ btnVoltarPcp.addEventListener("click", function () {
   window.scrollTo(0, 0);
 });
 
-// ----------------------------------------------------------
-//  Ação: arquivar a OP (registra autor e data)
-// ----------------------------------------------------------
 async function arquivarOP() {
   if (!opNoResumo) return;
   try {
     const referencia = doc(db, "ordens_producao", opNoResumo._id);
     const emailPcp = window.emailPcpLogado || "desconhecido";
-
-    // Registro da ação (início da trilha de auditoria)
-    const registro = {
-      acao: "arquivou",
-      autor: emailPcp,
-      em: new Date().toISOString()
-    };
+    const registro = { acao: "arquivou", autor: emailPcp, em: new Date().toISOString() };
     const atual = await getDoc(referencia);
     const historico = (atual.data().historicoPcp) || [];
     historico.push(registro);
-
     await updateDoc(referencia, {
       status: "finalizada_arquivada",
       arquivadaEm: new Date().toISOString(),
       arquivadaPor: emailPcp,
       historicoPcp: historico
     });
-
-    // Volta para a lista
     pcpResumo.style.display = "none";
     pcpPrincipal.style.display = "block";
     conteudoResumo.innerHTML = "";
@@ -189,11 +219,9 @@ async function arquivarOP() {
 function montarResumo(op) {
   const info = statusDaOP(op);
   let html = "";
-
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
-  // Ações do PCP (só quando aguardando PCP)
   if (op.status === "finalizada_aguardando_pcp") {
     html += "<div class='acoes-pcp'>";
     html += "<button id='btn-arquivar' class='botao-arquivar'>Arquivar OP</button>";
@@ -234,7 +262,6 @@ function montarResumo(op) {
   }
   html += "</div>";
 
-  // Histórico de ações do PCP (se houver)
   if (op.historicoPcp && op.historicoPcp.length > 0) {
     html += "<div class='cartao'><h3>Histórico do PCP</h3>";
     op.historicoPcp.forEach(function (h) {
