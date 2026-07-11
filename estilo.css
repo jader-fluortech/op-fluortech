@@ -73,6 +73,26 @@ body {
   cursor: pointer; padding: 0 4px;
 }
 .modal-fechar:hover { color: #1f2933; }
+.area-docs { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e1e5ea; }
+.area-docs h3 { font-size: 15px; color: #0b4f6c; margin-bottom: 10px; }
+.botao-escolher-docs {
+  display: inline-block; background-color: #eef1f4; color: #0b4f6c;
+  border: 1px solid #cbd2d9; border-radius: 8px; padding: 10px 18px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.botao-escolher-docs:hover { background-color: #e1e5ea; }
+.lista-docs { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.doc-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background-color: #f8f9fb; border: 1px solid #eef1f4; border-radius: 8px; padding: 10px 14px;
+}
+.doc-nome { font-size: 14px; color: #1f2933; overflow-wrap: anywhere; }
+.doc-remover {
+  background-color: #fdecea; color: #b3261e; border: none; border-radius: 6px;
+  width: 30px; height: 30px; font-size: 18px; cursor: pointer; line-height: 1; flex-shrink: 0; margin-left: 10px;
+}
+.doc-remover:hover { background-color: #f9d7d3; }
+
 #arquivo-op {
   display: block; margin-bottom: 24px; padding: 10px; background-color: #ffffff;
   border: 1px dashed #9aa5b1; border-radius: 8px; width: 100%; cursor: pointer;
