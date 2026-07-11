@@ -23,6 +23,10 @@ const inputDocs = document.getElementById("docs-importar");
 const listaDocs = document.getElementById("lista-docs-importar");
 let docsEscolhidos = [];   // arquivos escolhidos, ainda não enviados
 
+const areaSalvar = document.querySelector(".area-salvar");
+areaSalvar.style.display = "none";
+document.getElementById("btn-salvar").addEventListener("click", salvarOP);
+
 inputDocs.addEventListener("change", function (evento) {
   const arquivos = Array.from(evento.target.files);
   arquivos.forEach(function (arq) { docsEscolhidos.push(arq); });
