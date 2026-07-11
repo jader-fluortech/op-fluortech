@@ -1,6 +1,5 @@
 /* ===== Base ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
   font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   background-color: #f4f5f7; color: #1f2933;
@@ -150,6 +149,20 @@ body {
 .op-aberta-cabecalho h2 { font-size: 22px; margin-bottom: 4px; }
 .op-aberta-cabecalho p { font-size: 14px; opacity: 0.9; }
 
+/* Ações do PCP */
+.acoes-pcp {
+  background-color: #fffdf7; border: 1px solid #f2d99a; border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.botao-arquivar {
+  background-color: #0b7a3b; color: #ffffff; border: none; border-radius: 8px;
+  padding: 12px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.botao-arquivar:hover { background-color: #096330; }
+.nota-acoes { font-size: 13px; color: #9a6700; font-style: italic; }
+
+.linha-historico { font-size: 13px; color: #52606d; padding: 4px 0; }
+
 .etapa-resumo {
   background-color: #f8f9fb; border: 1px solid #eef1f4; border-radius: 8px;
   padding: 16px; margin-bottom: 14px;
@@ -171,6 +184,26 @@ body {
 .assinatura-img img {
   max-width: 300px; width: 100%; border: 1px solid #e1e5ea; border-radius: 8px; background-color: #ffffff;
 }
+
+/* ===== Janela de confirmação (modal) ===== */
+.modal-fundo {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(31, 41, 51, 0.55);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000;
+}
+.modal-caixa {
+  background-color: #ffffff; border-radius: 12px; padding: 28px;
+  max-width: 440px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.modal-texto { font-size: 17px; color: #1f2933; margin-bottom: 24px; text-align: center; line-height: 1.5; white-space: pre-line; }
+.modal-botoes { display: flex; gap: 12px; }
+.modal-btn-cancelar, .modal-btn-confirmar {
+  flex: 1; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none;
+}
+.modal-btn-cancelar { background-color: #eef1f4; color: #52606d; }
+.modal-btn-cancelar:hover { background-color: #e1e5ea; }
+.modal-btn-confirmar { background-color: #0b7a3b; color: #ffffff; }
+.modal-btn-confirmar:hover { background-color: #096330; }
 
 /* ===== Rodapé ===== */
 .rodape { text-align: center; padding: 16px; color: #9aa5b1; border-top: 1px solid #e1e5ea; margin-top: auto; }
