@@ -125,9 +125,10 @@ body {
 }
 .card-pcp:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
 .card-pcp:active { transform: scale(0.996); }
+.card-pcp.st-nao-iniciada { border-left-color: #9aa5b1; }
 .card-pcp.st-ativa { border-left-color: #0b4f6c; }
 .card-pcp.st-aguardando { border-left-color: #f0a500; background-color: #fffdf7; }
-.card-pcp.st-finalizada { border-left-color: #0b7a3b; }
+.card-pcp.st-arquivada { border-left-color: #e1e5ea; }
 .card-pcp-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .card-pcp .op-numero { font-size: 16px; font-weight: 700; color: #1f2933; }
 
