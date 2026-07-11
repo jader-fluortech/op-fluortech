@@ -35,7 +35,7 @@
     <!-- ÁREA DO PCP -->
     <section id="area-pcp" style="display:none;">
 
-      <!-- PAINEL PRINCIPAL (upload + lista) -->
+      <!-- PAINEL PRINCIPAL -->
       <div id="pcp-principal">
         <p id="status-conexao" class="status">Iniciando sistema…</p>
 
@@ -50,20 +50,43 @@
 
         <section class="area-lista-pcp">
           <h2>Ordens de Produção</h2>
+
           <div class="grupo-pcp">
-            <h3 class="titulo-grupo">Aguardando o primeiro operador</h3>
-            <div id="lista-nao-iniciadas" class="lista-pcp"></div>
-            <p id="vazio-nao-iniciadas" class="vazio-grupo" style="display:none;">Nenhuma OP aguardando início.</p>
+            <button class="titulo-grupo" data-alvo="lista-nao-iniciadas" aria-expanded="true">
+              <span>Aguardando o primeiro operador</span>
+              <span class="seta-grupo">▾</span>
+            </button>
+            <div class="conteudo-grupo" id="wrap-nao-iniciadas">
+              <div id="lista-nao-iniciadas" class="lista-pcp"></div>
+              <p id="vazio-nao-iniciadas" class="vazio-grupo" style="display:none;">Nenhuma OP aguardando início.</p>
+            </div>
           </div>
+
           <div class="grupo-pcp">
-            <h3 class="titulo-grupo">Em andamento e finalizadas</h3>
-            <div id="lista-geral" class="lista-pcp"></div>
-            <p id="vazio-geral" class="vazio-grupo" style="display:none;">Nenhuma OP em andamento ou finalizada.</p>
+            <button class="titulo-grupo" data-alvo="lista-em-andamento" aria-expanded="true">
+              <span>Em andamento</span>
+              <span class="seta-grupo">▾</span>
+            </button>
+            <div class="conteudo-grupo" id="wrap-em-andamento">
+              <div id="lista-em-andamento" class="lista-pcp"></div>
+              <p id="vazio-em-andamento" class="vazio-grupo" style="display:none;">Nenhuma OP em andamento.</p>
+            </div>
+          </div>
+
+          <div class="grupo-pcp">
+            <button class="titulo-grupo recolhido" data-alvo="lista-arquivadas" aria-expanded="false">
+              <span>Arquivadas</span>
+              <span class="seta-grupo">▸</span>
+            </button>
+            <div class="conteudo-grupo" id="wrap-arquivadas" style="display:none;">
+              <div id="lista-arquivadas" class="lista-pcp"></div>
+              <p id="vazio-arquivadas" class="vazio-grupo" style="display:none;">Nenhuma OP arquivada.</p>
+            </div>
           </div>
         </section>
       </div>
 
-      <!-- PAINEL DE RESUMO DA OP (escondido até clicar num card) -->
+      <!-- PAINEL DE RESUMO -->
       <div id="pcp-resumo" style="display:none;">
         <button id="btn-voltar-pcp" class="botao-voltar">← Voltar para a lista</button>
         <div id="conteudo-resumo"></div>
