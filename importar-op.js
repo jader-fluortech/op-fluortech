@@ -72,6 +72,7 @@ function limparUpload() {
   docsEscolhidos = [];
   listaDocs.innerHTML = "";
   areaDocs.style.display = "none";
+  areaSalvar.style.display = "none";
 }
 campoArquivo.addEventListener("change", function (evento) {
   const arquivo = evento.target.files[0];
