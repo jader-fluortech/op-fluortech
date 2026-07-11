@@ -438,6 +438,14 @@ function montarResumo(op, emCorrecao) {
   }
   html += "</div>";
 
+  if (op.documentos && op.documentos.length > 0) {
+    html += "<div class='cartao'><h3>Documentos</h3><div class='lista-docs-resumo'>";
+    op.documentos.forEach(function (d) {
+      html += "<a class='doc-link' href='" + d.url + "' target='_blank' rel='noopener'>📄 " + d.nome + "</a>";
+    });
+    html += "</div></div>";
+  }
+
   if (op.historicoPcp && op.historicoPcp.length > 0) {
     html += "<div class='cartao'><h3>Histórico do PCP</h3>";
     op.historicoPcp.slice().reverse().forEach(function (h) {
