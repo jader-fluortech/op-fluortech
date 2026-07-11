@@ -15,8 +15,8 @@
 }
 .op-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
 .op-card:active { transform: scale(0.995); }
-.op-card.disponivel { border-left-color: #0b7a3b; }
-.op-card.ocupada { border-left-color: #f0a500; background-color: #fbfbf9; }
+.op-card.disponivel { border-left-color: #9aa5b1; }
+.op-card.ocupada { border-left-color: #0b4f6c; background-color: #fbfbf9; }
 
 .op-card-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .op-numero { font-size: 18px; font-weight: 700; color: #1f2933; }
