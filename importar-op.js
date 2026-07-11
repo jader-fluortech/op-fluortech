@@ -137,13 +137,7 @@ function mostrarOP(op) {
     html += "</ol></div>";
   }
 
-  html += "<div class='area-salvar'>";
-  html += "<button id='btn-salvar' class='botao-salvar'>Salvar OP no sistema</button>";
-  html += "<p id='msg-salvar' class='msg-salvar'></p>";
-  html += "</div>";
-
   areaConteudo.innerHTML = html;
-  document.getElementById("btn-salvar").addEventListener("click", salvarOP);
   areaDocs.style.display = "block";
 }
 
