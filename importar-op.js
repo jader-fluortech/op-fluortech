@@ -65,8 +65,10 @@ function limparUpload() {
   campoArquivo.value = "";
   areaConteudo.innerHTML = "";
   opAtual = null;
+  docsEscolhidos = [];
+  listaDocs.innerHTML = "";
+  areaDocs.style.display = "none";
 }
-
 campoArquivo.addEventListener("change", function (evento) {
   const arquivo = evento.target.files[0];
   if (!arquivo) return;
