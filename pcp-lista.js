@@ -125,6 +125,48 @@ function montarListas(ops) {
   renderizarGrupo(listaEmAndamento, vazioEmAndamento, emAndamento, false);
 }
 
+// ---- Filtro das arquivadas ----
+btnBuscarArquivadas.addEventListener("click", buscarArquivadas);
+btnLimparArquivadas.addEventListener("click", limparFiltros);
+
+function buscarArquivadas() {
+  const num = filtroNumero.value.trim().toLowerCase();
+  const de = filtroDataDe.value ? new Date(filtroDataDe.value + "T00:00:00").getTime() : null;
+  const ate = filtroDataAte.value ? new Date(filtroDataAte.value + "T23:59:59").getTime() : null;
+
+  if (!num && !de && !ate) {
+    msgFiltro.textContent = "Preencha o número da OP ou uma data para buscar.";
+    msgFiltro.className = "msg-filtro erro-msg";
+    listaArquivadas.innerHTML = "";
+    vazioArquivadas.style.display = "none";
+    return;
+  }
+  msgFiltro.textContent = "";
+
+  const arquivadas = opsCarregadas.filter(function (op) {
+    if (op.status !== "finalizada_arquivada") return false;
+    if (num && !(op.numero || "").toLowerCase().includes(num)) return false;
+    if (de || ate) {
+      const t = textoData(op.arquivadaEm);
+      if (de && t < de) return false;
+      if (ate && t > ate) return false;
+    }
+    return true;
+  });
+
+  arquivadas.sort(function (a, b) { return textoData(b.arquivadaEm) - textoData(a.arquivadaEm); });
+  renderizarGrupo(listaArquivadas, vazioArquivadas, arquivadas, true);
+}
+
+function limparFiltros() {
+  filtroNumero.value = "";
+  filtroDataDe.value = "";
+  filtroDataAte.value = "";
+  msgFiltro.textContent = "";
+  listaArquivadas.innerHTML = "";
+  vazioArquivadas.style.display = "none";
+}
+
 function renderizarGrupo(container, elementoVazio, ops, enxuto) {
   if (ops.length === 0) { container.innerHTML = ""; elementoVazio.style.display = "block"; return; }
   elementoVazio.style.display = "none";
