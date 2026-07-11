@@ -1,5 +1,5 @@
 // ==========================================================
-//  Lista de OPs no PCP — 3 grupos, recolher/expandir, resumo, arquivar
+//  Lista de OPs no PCP — 3 grupos, resumo, arquivar, corrigir (modo)
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -37,22 +37,15 @@ const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 
 let opsCarregadas = [];
 let opNoResumo = null;
+let modoCorrecao = false;   // se está editando a OP
 
-// ---- Recolher/expandir seções ----
 document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
   botao.addEventListener("click", function () {
     const alvo = document.getElementById("wrap-" + botao.getAttribute("data-alvo").replace("lista-", ""));
     const seta = botao.querySelector(".seta-grupo");
     const recolhido = botao.classList.toggle("recolhido");
-    if (recolhido) {
-      alvo.style.display = "none";
-      seta.textContent = "▸";
-      botao.setAttribute("aria-expanded", "false");
-    } else {
-      alvo.style.display = "block";
-      seta.textContent = "▾";
-      botao.setAttribute("aria-expanded", "true");
-    }
+    if (recolhido) { alvo.style.display = "none"; seta.textContent = "▸"; botao.setAttribute("aria-expanded", "false"); }
+    else { alvo.style.display = "block"; seta.textContent = "▾"; botao.setAttribute("aria-expanded", "true"); }
   });
 });
 
@@ -92,6 +85,7 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
     dados._id = documento.id;
     opsCarregadas.push(dados);
   });
+  // Não remexe a tela se estiver no meio de uma correção
   if (pcpResumo.style.display === "none") montarListas(opsCarregadas);
 }, function (erro) {
   console.error("Erro ao carregar OPs (PCP):", erro);
@@ -102,27 +96,19 @@ function montarListas(ops) {
   const naoIniciadas = [];
   const emAndamento = [];
   const arquivadas = [];
-
   ops.forEach(function (op) {
-    if (op.status === "finalizada_arquivada") {
-      arquivadas.push(op);
-    } else if (dataAberturaOP(op)) {
-      emAndamento.push(op);
-    } else {
-      naoIniciadas.push(op);
-    }
+    if (op.status === "finalizada_arquivada") arquivadas.push(op);
+    else if (dataAberturaOP(op)) emAndamento.push(op);
+    else naoIniciadas.push(op);
   });
-
   naoIniciadas.sort(function (a, b) { return textoData(b.importadaEm) - textoData(a.importadaEm); });
   emAndamento.sort(function (a, b) { return textoData(dataAberturaOP(b)) - textoData(dataAberturaOP(a)); });
   arquivadas.sort(function (a, b) { return textoData(b.arquivadaEm) - textoData(a.arquivadaEm); });
-
   renderizarGrupo(listaNaoIniciadas, vazioNaoIniciadas, naoIniciadas, false);
   renderizarGrupo(listaEmAndamento, vazioEmAndamento, emAndamento, false);
   renderizarGrupo(listaArquivadas, vazioArquivadas, arquivadas, true);
 }
 
-// enxuto = true → card compacto (arquivadas)
 function renderizarGrupo(container, elementoVazio, ops, enxuto) {
   if (ops.length === 0) { container.innerHTML = ""; elementoVazio.style.display = "block"; return; }
   elementoVazio.style.display = "none";
@@ -134,8 +120,7 @@ function renderizarGrupo(container, elementoVazio, ops, enxuto) {
       html += "<span class='op-numero'>OP " + (op.numero || "—") + "</span>";
       html += "<span class='arquivado-data'>Arquivada: " + formatarDataHora(op.arquivadaEm) + "</span></div>";
       html += "<p class='op-cliente'>" + (op.cliente || "—") + "</p>";
-      html += "<p class='op-peca'>" + (op.descricao || op.produto || "—") + "</p>";
-      html += "</div>";
+      html += "<p class='op-peca'>" + (op.descricao || op.produto || "—") + "</p></div>";
     } else {
       const info = statusDaOP(op);
       html += "<div class='card-pcp " + info.classe + "' data-id='" + op._id + "'>";
@@ -149,7 +134,6 @@ function renderizarGrupo(container, elementoVazio, ops, enxuto) {
     }
   });
   container.innerHTML = html;
-
   container.querySelectorAll(".card-pcp").forEach(function (card) {
     card.addEventListener("click", function () {
       const op = opsCarregadas.find(function (o) { return o._id === card.getAttribute("data-id"); });
@@ -160,10 +144,15 @@ function renderizarGrupo(container, elementoVazio, ops, enxuto) {
 
 function abrirResumo(op) {
   opNoResumo = op;
-  conteudoResumo.innerHTML = montarResumo(op);
+  modoCorrecao = false;
+  desenharResumo();
   pcpPrincipal.style.display = "none";
   pcpResumo.style.display = "block";
   window.scrollTo(0, 0);
+}
+
+function desenharResumo() {
+  conteudoResumo.innerHTML = montarResumo(opNoResumo, modoCorrecao);
 
   conteudoResumo.querySelectorAll(".btn-assinatura").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -174,11 +163,19 @@ function abrirResumo(op) {
   });
 
   const btnArquivar = document.getElementById("btn-arquivar");
-  if (btnArquivar) {
-    btnArquivar.addEventListener("click", function () {
-      confirmarPcp("Deseja arquivar esta OP? Ela será marcada como finalizada em definitivo.", arquivarOP);
-    });
-  }
+  if (btnArquivar) btnArquivar.addEventListener("click", function () {
+    confirmarPcp("Deseja arquivar esta OP? Ela será marcada como finalizada em definitivo.", arquivarOP);
+  });
+
+  const btnCorrigir = document.getElementById("btn-corrigir");
+  if (btnCorrigir) btnCorrigir.addEventListener("click", function () {
+    modoCorrecao = true;
+    desenharResumo();
+    window.scrollTo(0, 0);
+  });
+
+  const btnSalvarCorrecao = document.getElementById("btn-salvar-correcao");
+  if (btnSalvarCorrecao) btnSalvarCorrecao.addEventListener("click", concluirCorrecao);
 }
 
 btnVoltarPcp.addEventListener("click", function () {
@@ -186,9 +183,17 @@ btnVoltarPcp.addEventListener("click", function () {
   pcpPrincipal.style.display = "block";
   conteudoResumo.innerHTML = "";
   opNoResumo = null;
+  modoCorrecao = false;
   montarListas(opsCarregadas);
   window.scrollTo(0, 0);
 });
+
+// Encerra o modo de correção e devolve a OP para "aguardando PCP"
+async function concluirCorrecao() {
+  modoCorrecao = false;
+  desenharResumo();
+  window.scrollTo(0, 0);
+}
 
 async function arquivarOP() {
   if (!opNoResumo) return;
@@ -216,16 +221,25 @@ async function arquivarOP() {
   }
 }
 
-function montarResumo(op) {
+function montarResumo(op, emCorrecao) {
   const info = statusDaOP(op);
   let html = "";
+
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
+  if (emCorrecao) {
+    html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento para editá-lo.</div>";
+  }
+
   if (op.status === "finalizada_aguardando_pcp") {
     html += "<div class='acoes-pcp'>";
-    html += "<button id='btn-arquivar' class='botao-arquivar'>Arquivar OP</button>";
-    html += "<span class='nota-acoes'>A opção “Corrigir OP” será adicionada em breve.</span>";
+    if (!emCorrecao) {
+      html += "<button id='btn-corrigir' class='botao-corrigir'>Corrigir OP</button>";
+      html += "<button id='btn-arquivar' class='botao-arquivar'>Arquivar OP</button>";
+    } else {
+      html += "<button id='btn-salvar-correcao' class='botao-arquivar'>Salvar alterações</button>";
+    }
     html += "</div>";
   }
 
