@@ -143,6 +143,7 @@ function mostrarOP(op) {
 
   areaConteudo.innerHTML = html;
   areaDocs.style.display = "block";
+areaSalvar.style.display = "block";
 }
 
 // ----------------------------------------------------------
