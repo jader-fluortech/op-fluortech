@@ -6,6 +6,8 @@
 import { lerOP } from "./leitor-op.js";
 import { db } from "./firebase.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { storage } from "./firebase.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
 
 const campoArquivo = document.getElementById("arquivo-op");
 const areaConteudo = document.getElementById("conteudo-op");
