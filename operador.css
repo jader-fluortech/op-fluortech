@@ -25,8 +25,8 @@
   font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 20px;
   text-transform: uppercase; letter-spacing: 0.3px;
 }
-.status-disponivel { background-color: #e3f4ea; color: #0b7a3b; }
-.status-ocupada { background-color: #fdf0d5; color: #9a6700; }
+.status-disponivel { background-color: #e3edf3; color: #0b4f6c; }
+.status-ocupada { background-color: #e3f4ea; color: #0b7a3b; }
 
 .op-card-corpo p { margin-bottom: 4px; }
 .op-cliente { font-size: 15px; font-weight: 600; color: #1f2933; }
