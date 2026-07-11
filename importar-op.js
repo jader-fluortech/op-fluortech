@@ -144,6 +144,7 @@ function mostrarOP(op) {
 
   areaConteudo.innerHTML = html;
   document.getElementById("btn-salvar").addEventListener("click", salvarOP);
+  areaDocs.style.display = "block";
 }
 
 // ----------------------------------------------------------
