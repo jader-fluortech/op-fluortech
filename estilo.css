@@ -54,6 +54,25 @@ body {
 /* ===== Importar ===== */
 .area-importar h2 { font-size: 18px; margin-bottom: 12px; color: #0b4f6c; }
 .rotulo-upload { display: block; font-weight: 600; margin-bottom: 8px; }
+
+.botao-abrir-importar {
+  background-color: #0b7a3b; color: #fff; border: none; border-radius: 8px;
+  padding: 14px 24px; font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.botao-abrir-importar:hover { background-color: #096330; }
+
+.modal-importar-caixa {
+  max-width: 640px; max-height: 88vh; overflow-y: auto; text-align: left;
+}
+.modal-importar-topo {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.modal-importar-topo h2 { font-size: 20px; color: #0b4f6c; }
+.modal-fechar {
+  background: none; border: none; font-size: 28px; line-height: 1; color: #7b8794;
+  cursor: pointer; padding: 0 4px;
+}
+.modal-fechar:hover { color: #1f2933; }
 #arquivo-op {
   display: block; margin-bottom: 24px; padding: 10px; background-color: #ffffff;
   border: 1px dashed #9aa5b1; border-radius: 8px; width: 100%; cursor: pointer;
