@@ -1,5 +1,5 @@
 // ==========================================================
-//  Importar OP — lê o arquivo, mostra em cartões e salva no banco
+//  Importar OP — modal: lê o arquivo, mostra em cartões e salva no banco
 //  Regras de reimportação: bloqueia OP ativa ou finalizada.
 // ==========================================================
 
@@ -10,7 +10,26 @@ import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/
 const campoArquivo = document.getElementById("arquivo-op");
 const areaConteudo = document.getElementById("conteudo-op");
 
+const modalImportar = document.getElementById("modal-importar");
+const btnAbrirImportar = document.getElementById("btn-abrir-importar");
+const btnFecharImportar = document.getElementById("btn-fechar-importar");
+
 let opAtual = null;
+
+// ---- Abrir / fechar o modal ----
+btnAbrirImportar.addEventListener("click", function () {
+  limparUpload();
+  modalImportar.style.display = "flex";
+});
+btnFecharImportar.addEventListener("click", fecharModal);
+modalImportar.addEventListener("click", function (e) {
+  // fecha só se clicar no fundo escuro, não na caixa
+  if (e.target === modalImportar) fecharModal();
+});
+function fecharModal() {
+  modalImportar.style.display = "none";
+  limparUpload();
+}
 
 // Limpa o campo de upload e o conteúdo mostrado
 function limparUpload() {
@@ -18,9 +37,6 @@ function limparUpload() {
   areaConteudo.innerHTML = "";
   opAtual = null;
 }
-
-// Ao carregar a página, garante que o campo começa vazio
-limparUpload();
 
 campoArquivo.addEventListener("change", function (evento) {
   const arquivo = evento.target.files[0];
@@ -124,7 +140,7 @@ async function salvarOP() {
       const dadosExistentes = existente.data();
       const status = dadosExistentes.status;
 
-      if (status === "finalizada") {
+      if (status === "finalizada_arquivada") {
         msg.innerHTML = "🔒 Esta OP já foi <strong>finalizada</strong>.<br>" +
           "Para importar novamente com o mesmo número, contate o administrador para excluí-la do sistema.";
         msg.className = "msg-salvar erro-msg";
@@ -164,10 +180,8 @@ async function salvarOP() {
       "Já está disponível para os operadores na primeira etapa.";
     msg.className = "msg-salvar sucesso-msg";
 
-    // Limpa o campo de upload depois de 2 segundos, para a próxima OP
-    setTimeout(function () {
-      campoArquivo.value = "";
-    }, 2000);
+    // Fecha o modal depois de 2 segundos
+    setTimeout(fecharModal, 2000);
   } catch (erro) {
     console.error("Erro ao salvar OP:", erro);
     msg.textContent = "❌ Erro ao salvar: " + erro.message;
@@ -180,7 +194,6 @@ function linha(rotulo, valor) {
   const conteudo = valor ? valor : "—";
   return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
 }
-
 function linhaLarga(rotulo, valor) {
   const conteudo = valor ? valor : "—";
   return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + conteudo + "</span></div>";
