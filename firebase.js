@@ -48,6 +48,6 @@ const configAtiva = configuracoes[AMBIENTE];
 const app = initializeApp(configAtiva);
 const db = getFirestore(app);
 const auth = getAuth(app);
-
-// Deixa o banco, o login e o ambiente disponíveis para o resto do sistema
-export { db, auth, AMBIENTE };
+const storage = getStorage(app);
+// Deixa o banco, o login, o storage e o ambiente disponíveis para o resto do sistema
+export { db, auth, storage, AMBIENTE };
