@@ -1,5 +1,5 @@
 // ==========================================================
-//  Lista de OPs no PCP — 3 grupos, resumo, arquivar, corrigir (modo)
+//  Lista de OPs no PCP — resumo, arquivar, corrigir (campos simples)
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -37,7 +37,7 @@ const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 
 let opsCarregadas = [];
 let opNoResumo = null;
-let modoCorrecao = false;   // se está editando a OP
+let modoCorrecao = false;
 
 document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
   botao.addEventListener("click", function () {
@@ -50,7 +50,7 @@ document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
 });
 
 // ---- Janela de confirmação ----
-let modalPcp, modalPcpTexto, modalPcpCancelar, modalPcpConfirmar, acaoConfirmarPcp;
+let modalPcp, modalPcpTexto, modalPcpCancelar, modalPcpConfirmar, acaoConfirmarPcp, acaoCancelarPcp;
 function prepararModal() {
   modalPcp = document.createElement("div");
   modalPcp.className = "modal-fundo";
@@ -63,19 +63,24 @@ function prepararModal() {
   modalPcpTexto = document.getElementById("modal-pcp-texto");
   modalPcpCancelar = document.getElementById("modal-pcp-cancelar");
   modalPcpConfirmar = document.getElementById("modal-pcp-confirmar");
-  modalPcpCancelar.addEventListener("click", fecharModalPcp);
+  modalPcpCancelar.addEventListener("click", function () {
+    const acao = acaoCancelarPcp;
+    fecharModalPcp();
+    if (acao) acao();
+  });
   modalPcpConfirmar.addEventListener("click", function () {
     const acao = acaoConfirmarPcp;
     fecharModalPcp();
     if (acao) acao();
   });
 }
-function confirmarPcp(texto, aoConfirmar) {
+function confirmarPcp(texto, aoConfirmar, aoCancelar) {
   modalPcpTexto.textContent = texto;
   acaoConfirmarPcp = aoConfirmar;
+  acaoCancelarPcp = aoCancelar || null;
   modalPcp.style.display = "flex";
 }
-function fecharModalPcp() { modalPcp.style.display = "none"; acaoConfirmarPcp = null; }
+function fecharModalPcp() { modalPcp.style.display = "none"; acaoConfirmarPcp = null; acaoCancelarPcp = null; }
 prepararModal();
 
 onSnapshot(collection(db, "ordens_producao"), function (resultado) {
@@ -85,7 +90,6 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
     dados._id = documento.id;
     opsCarregadas.push(dados);
   });
-  // Não remexe a tela se estiver no meio de uma correção
   if (pcpResumo.style.display === "none") montarListas(opsCarregadas);
 }, function (erro) {
   console.error("Erro ao carregar OPs (PCP):", erro);
@@ -176,6 +180,81 @@ function desenharResumo() {
 
   const btnSalvarCorrecao = document.getElementById("btn-salvar-correcao");
   if (btnSalvarCorrecao) btnSalvarCorrecao.addEventListener("click", concluirCorrecao);
+
+  // Liga os campos editáveis (só no modo correção)
+  if (modoCorrecao) ligarCamposEditaveis();
+}
+
+// ----------------------------------------------------------
+//  Campos editáveis (Pedaço 1: campos simples de texto/número)
+// ----------------------------------------------------------
+function ligarCamposEditaveis() {
+  conteudoResumo.querySelectorAll(".campo-editavel").forEach(function (celula) {
+    celula.addEventListener("click", function () {
+      if (celula.querySelector("input")) return; // já está editando
+
+      const etapaIdx = parseInt(celula.getAttribute("data-etapa"), 10);
+      const chave = celula.getAttribute("data-chave");
+      const rotulo = celula.getAttribute("data-rotulo");
+      const tipo = celula.getAttribute("data-tipo") || "text";
+      const valorAtual = celula.getAttribute("data-valor") || "";
+
+      const valorSpan = celula.querySelector(".valor");
+      valorSpan.style.display = "none";
+
+      const input = document.createElement("input");
+      input.type = tipo;
+      input.value = valorAtual;
+      input.className = "input-correcao";
+      celula.appendChild(input);
+      input.focus();
+
+      let jaTratou = false;
+
+      function finalizar() {
+        if (jaTratou) return;
+        jaTratou = true;
+        const novo = input.value;
+        input.remove();
+        valorSpan.style.display = "";
+
+        if (novo === valorAtual) return; // não mudou → não pergunta
+
+        confirmarPcp(
+          "Alterar " + rotulo + " de \"" + (valorAtual || "vazio") + "\" para \"" + (novo || "vazio") + "\"?",
+          function () { salvarCampoSimples(etapaIdx, chave, novo); },
+          function () { /* cancelou: mantém o valor antigo */ }
+        );
+      }
+
+      input.addEventListener("blur", finalizar);
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { input.blur(); }
+        if (e.key === "Escape") { jaTratou = true; input.remove(); valorSpan.style.display = ""; }
+      });
+    });
+  });
+}
+
+async function salvarCampoSimples(etapaIdx, chave, novoValor) {
+  try {
+    const referencia = doc(db, "ordens_producao", opNoResumo._id);
+    const atual = await getDoc(referencia);
+    const dados = atual.data();
+
+    if (!dados.etapas[etapaIdx].apontamentos) dados.etapas[etapaIdx].apontamentos = {};
+    dados.etapas[etapaIdx].apontamentos[chave] = novoValor;
+
+    await updateDoc(referencia, { etapas: dados.etapas });
+
+    // Atualiza a cópia local e redesenha mantendo o modo correção
+    opNoResumo = dados;
+    opNoResumo._id = referencia.id;
+    desenharResumo();
+  } catch (erro) {
+    console.error("Erro ao salvar correção:", erro);
+    alert("Não foi possível salvar a alteração: " + erro.message);
+  }
 }
 
 btnVoltarPcp.addEventListener("click", function () {
@@ -188,8 +267,7 @@ btnVoltarPcp.addEventListener("click", function () {
   window.scrollTo(0, 0);
 });
 
-// Encerra o modo de correção e devolve a OP para "aguardando PCP"
-async function concluirCorrecao() {
+function concluirCorrecao() {
   modoCorrecao = false;
   desenharResumo();
   window.scrollTo(0, 0);
@@ -224,12 +302,11 @@ async function arquivarOP() {
 function montarResumo(op, emCorrecao) {
   const info = statusDaOP(op);
   let html = "";
-
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
   if (emCorrecao) {
-    html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento para editá-lo.</div>";
+    html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento (em azul) para editá-lo.</div>";
   }
 
   if (op.status === "finalizada_aguardando_pcp") {
@@ -270,7 +347,7 @@ function montarResumo(op, emCorrecao) {
 
   html += "<div class='cartao'><h3>Etapas e apontamentos</h3>";
   if (op.etapas && op.etapas.length > 0) {
-    op.etapas.forEach(function (etapa, indice) { html += montarEtapaResumo(etapa, indice); });
+    op.etapas.forEach(function (etapa, indice) { html += montarEtapaResumo(etapa, indice, emCorrecao); });
   } else {
     html += "<p class='texto-vazio'>Sem etapas registradas.</p>";
   }
@@ -287,7 +364,7 @@ function montarResumo(op, emCorrecao) {
   return html;
 }
 
-function montarEtapaResumo(etapa, indice) {
+function montarEtapaResumo(etapa, indice, emCorrecao) {
   const ap = etapa.apontamentos || {};
   const statusEtapa = etapa.status === "concluida" ? "Concluída"
     : etapa.status === "em_producao" ? "Em produção" : "Pendente";
@@ -305,6 +382,7 @@ function montarEtapaResumo(etapa, indice) {
     return h;
   }
 
+  // Bloco de horários do sistema — NUNCA editável
   h += "<div class='campos etapa-campos'>";
   h += campo("Operador", etapa.operadorNome);
   h += campo("OP aberta em", formatarDataHora(etapa.horarioAbertura));
@@ -312,11 +390,13 @@ function montarEtapaResumo(etapa, indice) {
   h += campo("Etapa concluída em", formatarDataHora(etapa.horarioFimEtapa));
   h += "</div>";
 
+  // Bloco de apontamento — editável no modo correção (campos simples por enquanto)
   h += "<div class='campos etapa-campos'>";
-  h += campo("Hora início (apontada)", ap.horaInicio);
-  h += campo("Hora fim (apontada)", ap.horaFim);
-  h += campo("Qtde produzida", ap.qtdeProduzida);
-  h += campo("Perdas", ap.qtdePerda);
+  h += campoEditavel(indice, "horaInicio", "Hora início (apontada)", ap.horaInicio, "time", emCorrecao);
+  h += campoEditavel(indice, "horaFim", "Hora fim (apontada)", ap.horaFim, "time", emCorrecao);
+  h += campoEditavel(indice, "qtdeProduzida", "Qtde produzida", ap.qtdeProduzida, "number", emCorrecao);
+  h += campoEditavel(indice, "qtdePerda", "Perdas", ap.qtdePerda, "number", emCorrecao);
+  // Motivo da perda ainda NÃO editável (é campo de lista, vem no próximo pedaço)
   h += campoLargo("Motivo da perda", ap.motivoPerda ? (ap.motivoPerda + " — " + (MOTIVOS_PERDA[ap.motivoPerda] || "")) : null);
   h += "</div>";
 
@@ -338,6 +418,25 @@ function montarEtapaResumo(etapa, indice) {
 
   h += "</div>";
   return h;
+}
+
+// Campo normal (só leitura)
+function campo(rotulo, valor) {
+  return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
+}
+function campoLargo(rotulo, valor) {
+  return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
+}
+
+// Campo editável (no modo correção fica clicável; fora dele, é normal)
+function campoEditavel(etapaIdx, chave, rotulo, valor, tipo, emCorrecao) {
+  const mostrado = valor || "—";
+  if (!emCorrecao) {
+    return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + mostrado + "</span></div>";
+  }
+  return "<div class='campo campo-editavel' data-etapa='" + etapaIdx + "' data-chave='" + chave +
+         "' data-rotulo='" + rotulo + "' data-tipo='" + tipo + "' data-valor='" + (valor || "") + "'>" +
+         "<span class='rotulo'>" + rotulo + " ✎</span><span class='valor'>" + mostrado + "</span></div>";
 }
 
 function statusDaOP(op) {
@@ -368,10 +467,4 @@ function formatarDataHora(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-function campo(rotulo, valor) {
-  return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
-}
-function campoLargo(rotulo, valor) {
-  return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
 }
