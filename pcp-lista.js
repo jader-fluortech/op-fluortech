@@ -1,5 +1,5 @@
 // ==========================================================
-//  Lista de OPs no PCP — resumo, arquivar, corrigir (campos simples)
+//  Lista de OPs no PCP — resumo, arquivar, corrigir + auditoria
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -35,9 +35,17 @@ const pcpResumo = document.getElementById("pcp-resumo");
 const conteudoResumo = document.getElementById("conteudo-resumo");
 const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 
+const ROTULOS_LEGIVEIS = {
+  horaInicio: "Hora início (apontada)",
+  horaFim: "Hora fim (apontada)",
+  qtdeProduzida: "Qtde produzida",
+  qtdePerda: "Perdas"
+};
+
 let opsCarregadas = [];
 let opNoResumo = null;
 let modoCorrecao = false;
+let mudancasSessao = [];   // acumula as alterações da sessão de correção
 
 document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
   botao.addEventListener("click", function () {
@@ -149,6 +157,7 @@ function renderizarGrupo(container, elementoVazio, ops, enxuto) {
 function abrirResumo(op) {
   opNoResumo = op;
   modoCorrecao = false;
+  mudancasSessao = [];
   desenharResumo();
   pcpPrincipal.style.display = "none";
   pcpResumo.style.display = "block";
@@ -174,6 +183,7 @@ function desenharResumo() {
   const btnCorrigir = document.getElementById("btn-corrigir");
   if (btnCorrigir) btnCorrigir.addEventListener("click", function () {
     modoCorrecao = true;
+    mudancasSessao = [];   // começa uma nova sessão de correção
     desenharResumo();
     window.scrollTo(0, 0);
   });
@@ -181,17 +191,13 @@ function desenharResumo() {
   const btnSalvarCorrecao = document.getElementById("btn-salvar-correcao");
   if (btnSalvarCorrecao) btnSalvarCorrecao.addEventListener("click", concluirCorrecao);
 
-  // Liga os campos editáveis (só no modo correção)
   if (modoCorrecao) ligarCamposEditaveis();
 }
 
-// ----------------------------------------------------------
-//  Campos editáveis (Pedaço 1: campos simples de texto/número)
-// ----------------------------------------------------------
 function ligarCamposEditaveis() {
   conteudoResumo.querySelectorAll(".campo-editavel").forEach(function (celula) {
     celula.addEventListener("click", function () {
-      if (celula.querySelector("input")) return; // já está editando
+      if (celula.querySelector("input")) return;
 
       const etapaIdx = parseInt(celula.getAttribute("data-etapa"), 10);
       const chave = celula.getAttribute("data-chave");
@@ -210,44 +216,45 @@ function ligarCamposEditaveis() {
       input.focus();
 
       let jaTratou = false;
-
       function finalizar() {
         if (jaTratou) return;
         jaTratou = true;
         const novo = input.value;
         input.remove();
         valorSpan.style.display = "";
-
-        if (novo === valorAtual) return; // não mudou → não pergunta
-
+        if (novo === valorAtual) return;
         confirmarPcp(
           "Alterar " + rotulo + " de \"" + (valorAtual || "vazio") + "\" para \"" + (novo || "vazio") + "\"?",
-          function () { salvarCampoSimples(etapaIdx, chave, novo); },
-          function () { /* cancelou: mantém o valor antigo */ }
+          function () { salvarCampoSimples(etapaIdx, chave, valorAtual, novo); },
+          function () { /* cancelou */ }
         );
       }
-
       input.addEventListener("blur", finalizar);
       input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") { input.blur(); }
+        if (e.key === "Enter") input.blur();
         if (e.key === "Escape") { jaTratou = true; input.remove(); valorSpan.style.display = ""; }
       });
     });
   });
 }
 
-async function salvarCampoSimples(etapaIdx, chave, novoValor) {
+async function salvarCampoSimples(etapaIdx, chave, valorAntigo, novoValor) {
   try {
     const referencia = doc(db, "ordens_producao", opNoResumo._id);
     const atual = await getDoc(referencia);
     const dados = atual.data();
-
     if (!dados.etapas[etapaIdx].apontamentos) dados.etapas[etapaIdx].apontamentos = {};
     dados.etapas[etapaIdx].apontamentos[chave] = novoValor;
-
     await updateDoc(referencia, { etapas: dados.etapas });
 
-    // Atualiza a cópia local e redesenha mantendo o modo correção
+    // Registra a mudança na sessão (para a auditoria)
+    mudancasSessao.push({
+      etapa: etapaIdx + 1,
+      campo: ROTULOS_LEGIVEIS[chave] || chave,
+      de: valorAntigo || "vazio",
+      para: novoValor || "vazio"
+    });
+
     opNoResumo = dados;
     opNoResumo._id = referencia.id;
     desenharResumo();
@@ -263,12 +270,44 @@ btnVoltarPcp.addEventListener("click", function () {
   conteudoResumo.innerHTML = "";
   opNoResumo = null;
   modoCorrecao = false;
+  mudancasSessao = [];
   montarListas(opsCarregadas);
   window.scrollTo(0, 0);
 });
 
-function concluirCorrecao() {
+// Encerra a sessão de correção e grava o registro agrupado no histórico
+async function concluirCorrecao() {
+  if (mudancasSessao.length === 0) {
+    modoCorrecao = false;
+    desenharResumo();
+    window.scrollTo(0, 0);
+    return;
+  }
+  try {
+    const referencia = doc(db, "ordens_producao", opNoResumo._id);
+    const emailPcp = window.emailPcpLogado || "desconhecido";
+    const atual = await getDoc(referencia);
+    const dados = atual.data();
+    const historico = dados.historicoPcp || [];
+
+    historico.push({
+      acao: "corrigiu",
+      autor: emailPcp,
+      em: new Date().toISOString(),
+      mudancas: mudancasSessao.slice()   // a lista de alterações da sessão
+    });
+
+    await updateDoc(referencia, { historicoPcp: historico });
+
+    opNoResumo = dados;
+    opNoResumo.historicoPcp = historico;
+    opNoResumo._id = referencia.id;
+  } catch (erro) {
+    console.error("Erro ao registrar histórico:", erro);
+    alert("As alterações foram salvas, mas houve um erro ao registrar o histórico: " + erro.message);
+  }
   modoCorrecao = false;
+  mudancasSessao = [];
   desenharResumo();
   window.scrollTo(0, 0);
 }
@@ -356,7 +395,17 @@ function montarResumo(op, emCorrecao) {
   if (op.historicoPcp && op.historicoPcp.length > 0) {
     html += "<div class='cartao'><h3>Histórico do PCP</h3>";
     op.historicoPcp.forEach(function (h) {
-      html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> " + h.acao + "</p>";
+      if (h.acao === "corrigiu" && h.mudancas && h.mudancas.length > 0) {
+        html += "<div class='bloco-historico'>";
+        html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> corrigiu:</p>";
+        html += "<ul class='lista-mudancas'>";
+        h.mudancas.forEach(function (m) {
+          html += "<li>Etapa " + m.etapa + " · " + m.campo + ": " + m.de + " → " + m.para + "</li>";
+        });
+        html += "</ul></div>";
+      } else {
+        html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> " + h.acao + "</p>";
+      }
     });
     html += "</div>";
   }
@@ -382,7 +431,6 @@ function montarEtapaResumo(etapa, indice, emCorrecao) {
     return h;
   }
 
-  // Bloco de horários do sistema — NUNCA editável
   h += "<div class='campos etapa-campos'>";
   h += campo("Operador", etapa.operadorNome);
   h += campo("OP aberta em", formatarDataHora(etapa.horarioAbertura));
@@ -390,13 +438,11 @@ function montarEtapaResumo(etapa, indice, emCorrecao) {
   h += campo("Etapa concluída em", formatarDataHora(etapa.horarioFimEtapa));
   h += "</div>";
 
-  // Bloco de apontamento — editável no modo correção (campos simples por enquanto)
   h += "<div class='campos etapa-campos'>";
   h += campoEditavel(indice, "horaInicio", "Hora início (apontada)", ap.horaInicio, "time", emCorrecao);
   h += campoEditavel(indice, "horaFim", "Hora fim (apontada)", ap.horaFim, "time", emCorrecao);
   h += campoEditavel(indice, "qtdeProduzida", "Qtde produzida", ap.qtdeProduzida, "number", emCorrecao);
   h += campoEditavel(indice, "qtdePerda", "Perdas", ap.qtdePerda, "number", emCorrecao);
-  // Motivo da perda ainda NÃO editável (é campo de lista, vem no próximo pedaço)
   h += campoLargo("Motivo da perda", ap.motivoPerda ? (ap.motivoPerda + " — " + (MOTIVOS_PERDA[ap.motivoPerda] || "")) : null);
   h += "</div>";
 
@@ -420,15 +466,12 @@ function montarEtapaResumo(etapa, indice, emCorrecao) {
   return h;
 }
 
-// Campo normal (só leitura)
 function campo(rotulo, valor) {
   return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
 }
 function campoLargo(rotulo, valor) {
   return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
 }
-
-// Campo editável (no modo correção fica clicável; fora dele, é normal)
 function campoEditavel(etapaIdx, chave, rotulo, valor, tipo, emCorrecao) {
   const mostrado = valor || "—";
   if (!emCorrecao) {
