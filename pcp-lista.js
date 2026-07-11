@@ -483,14 +483,19 @@ function campoEditavel(etapaIdx, chave, rotulo, valor, tipo, emCorrecao) {
 }
 
 function statusDaOP(op) {
-  if (op.status === "finalizada_arquivada") return { texto: "Finalizada – arquivada", classe: "st-finalizada", selo: "selo-finalizada" };
+  if (op.status === "finalizada_arquivada") return { texto: "Finalizada – arquivada", classe: "st-arquivada", selo: "selo-arquivada" };
   if (op.status === "finalizada_aguardando_pcp") return { texto: "Finalizada – aguardando PCP", classe: "st-aguardando", selo: "selo-aguardando" };
   const etapa = etapaAtualDa(op);
   const nomeEtapa = etapa ? etapa.operacao : "—";
-  if (etapa && etapa.status === "em_producao") {
-    return { texto: "Ativa — " + nomeEtapa + ": em produção por " + (etapa.operadorNome || "operador"), classe: "st-ativa", selo: "selo-producao" };
+  // Sem nenhuma etapa aberta ainda → aguardando o primeiro operador
+  if (!dataAberturaOP(op)) {
+    return { texto: "Ativa — aguardando 1º operador", classe: "st-nao-iniciada", selo: "selo-cinza" };
   }
-  return { texto: "Ativa — " + nomeEtapa + ": aguardando alocação", classe: "st-ativa", selo: "selo-livre" };
+  // Já foi aberta antes; agora depende da etapa atual
+  if (etapa && etapa.status === "em_producao") {
+    return { texto: "Ativa — " + nomeEtapa + ": em produção por " + (etapa.operadorNome || "operador"), classe: "st-ativa", selo: "selo-verde" };
+  }
+  return { texto: "Ativa — " + nomeEtapa + ": aguardando alocação", classe: "st-ativa", selo: "selo-azul" };
 }
 
 function dataAberturaOP(op) {
