@@ -114,18 +114,15 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
 function montarListas(ops) {
   const naoIniciadas = [];
   const emAndamento = [];
-  const arquivadas = [];
   ops.forEach(function (op) {
-    if (op.status === "finalizada_arquivada") arquivadas.push(op);
-    else if (dataAberturaOP(op)) emAndamento.push(op);
+    if (op.status === "finalizada_arquivada") return; // arquivadas só via busca
+    if (dataAberturaOP(op)) emAndamento.push(op);
     else naoIniciadas.push(op);
   });
   naoIniciadas.sort(function (a, b) { return textoData(b.importadaEm) - textoData(a.importadaEm); });
   emAndamento.sort(function (a, b) { return textoData(dataAberturaOP(b)) - textoData(dataAberturaOP(a)); });
-  arquivadas.sort(function (a, b) { return textoData(b.arquivadaEm) - textoData(a.arquivadaEm); });
   renderizarGrupo(listaNaoIniciadas, vazioNaoIniciadas, naoIniciadas, false);
   renderizarGrupo(listaEmAndamento, vazioEmAndamento, emAndamento, false);
-  renderizarGrupo(listaArquivadas, vazioArquivadas, arquivadas, true);
 }
 
 function renderizarGrupo(container, elementoVazio, ops, enxuto) {
