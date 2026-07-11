@@ -103,8 +103,6 @@ body {
 .area-lista-pcp { margin-top: 32px; }
 .area-lista-pcp > h2 { font-size: 18px; color: #0b4f6c; margin-bottom: 16px; }
 .grupo-pcp { margin-bottom: 24px; }
-
-/* Título do grupo (botão recolher/expandir) */
 .titulo-grupo {
   width: 100%; display: flex; align-items: center; justify-content: space-between;
   background-color: transparent; border: none; cursor: pointer;
@@ -113,7 +111,6 @@ body {
 }
 .titulo-grupo:hover { color: #0b4f6c; }
 .seta-grupo { font-size: 12px; color: #9aa5b1; }
-.conteudo-grupo { }
 
 .vazio-grupo {
   text-align: center; color: #9aa5b1; font-size: 14px; padding: 20px;
@@ -131,7 +128,6 @@ body {
 .card-pcp.st-ativa { border-left-color: #0b4f6c; }
 .card-pcp.st-aguardando { border-left-color: #f0a500; background-color: #fffdf7; }
 .card-pcp.st-finalizada { border-left-color: #0b7a3b; }
-
 .card-pcp-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .card-pcp .op-numero { font-size: 16px; font-weight: 700; color: #1f2933; }
 
@@ -167,17 +163,29 @@ body {
 .op-aberta-cabecalho h2 { font-size: 22px; margin-bottom: 4px; }
 .op-aberta-cabecalho p { font-size: 14px; opacity: 0.9; }
 
+/* Ações do PCP */
 .acoes-pcp {
   background-color: #fffdf7; border: 1px solid #f2d99a; border-radius: 10px;
-  padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
 .botao-arquivar {
   background-color: #0b7a3b; color: #ffffff; border: none; border-radius: 8px;
   padding: 12px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
 }
 .botao-arquivar:hover { background-color: #096330; }
+.botao-corrigir {
+  background-color: #0b4f6c; color: #ffffff; border: none; border-radius: 8px;
+  padding: 12px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.botao-corrigir:hover { background-color: #0a4459; }
 .nota-acoes { font-size: 13px; color: #9a6700; font-style: italic; }
 .linha-historico { font-size: 13px; color: #52606d; padding: 4px 0; }
+
+/* Aviso do modo de correção */
+.aviso-correcao {
+  background-color: #eaf2f8; border: 1px solid #b9d4e6; color: #0b4f6c;
+  padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 600;
+}
 
 .etapa-resumo {
   background-color: #f8f9fb; border: 1px solid #eef1f4; border-radius: 8px;
