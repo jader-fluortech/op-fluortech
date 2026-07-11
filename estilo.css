@@ -148,7 +148,7 @@ body {
 .card-pcp-rodape { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: #7b8794; }
 
 /* Card enxuto (arquivados) */
-.card-arquivado { border-left-color: #0b7a3b; padding: 12px 16px; }
+.card-arquivado { border-left-color: #e1e5ea; padding: 12px 16px; }
 .card-arquivado-linha { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
 .card-arquivado .op-numero { font-size: 15px; }
 .arquivado-data { font-size: 12px; color: #7b8794; }
