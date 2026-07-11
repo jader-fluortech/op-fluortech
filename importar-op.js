@@ -199,10 +199,25 @@ async function salvarOP() {
       };
     });
 
+    // Sobe os documentos para o Storage e guarda os links
+    const documentos = [];
+    if (docsEscolhidos.length > 0) {
+      msg.textContent = "Enviando documentos…";
+      for (let i = 0; i < docsEscolhidos.length; i++) {
+        const arq = docsEscolhidos[i];
+        const caminho = "ops/" + opAtual.numero + "/" + Date.now() + "_" + arq.name;
+        const referenciaArq = ref(storage, caminho);
+        await uploadBytes(referenciaArq, arq);
+        const url = await getDownloadURL(referenciaArq);
+        documentos.push({ nome: arq.name, url: url, caminho: caminho });
+      }
+    }
+
     const dados = Object.assign({}, opAtual, {
       status: "ativa",
       etapaAtual: 1,
       etapas: etapas,
+      documentos: documentos,
       importadaEm: new Date().toISOString()
     });
 
