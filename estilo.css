@@ -93,6 +93,13 @@ body {
 }
 .doc-remover:hover { background-color: #f9d7d3; }
 
+.lista-docs-resumo { display: flex; flex-direction: column; gap: 8px; }
+.doc-link {
+  display: block; background-color: #f5f9fc; border: 1px solid #b9d4e6; border-radius: 8px;
+  padding: 12px 14px; font-size: 14px; color: #0b4f6c; font-weight: 600; text-decoration: none;
+}
+.doc-link:hover { background-color: #eaf2f8; }
+
 #arquivo-op {
   display: block; margin-bottom: 24px; padding: 10px; background-color: #ffffff;
   border: 1px dashed #9aa5b1; border-radius: 8px; width: 100%; cursor: pointer;
