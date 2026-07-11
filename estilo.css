@@ -133,9 +133,13 @@ body {
 .card-pcp .op-numero { font-size: 16px; font-weight: 700; color: #1f2933; }
 
 .selo-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 14px; white-space: nowrap; }
-.selo-livre { background-color: #e3f4ea; color: #0b7a3b; }
-.selo-producao { background-color: #fdf0d5; color: #9a6700; }
+.selo-cinza { background-color: #eef1f4; color: #52606d; }
+.selo-azul { background-color: #e3edf3; color: #0b4f6c; }
+.selo-verde { background-color: #e3f4ea; color: #0b7a3b; }
 .selo-aguardando { background-color: #fdecdf; color: #b25600; }
+.selo-arquivada { background-color: #e6e9ed; color: #52606d; }
+/* usados no resumo das etapas */
+.selo-producao { background-color: #fdf0d5; color: #9a6700; }
 .selo-finalizada { background-color: #e6e9ed; color: #52606d; }
 .selo-pendente { background-color: #eef1f4; color: #9aa5b1; }
 
