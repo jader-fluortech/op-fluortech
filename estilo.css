@@ -162,7 +162,7 @@ body {
 }
 .filtro-linha { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; }
 .filtro-campo { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
-.filtros-arquivadas .filtro-botoes { margin-top: 0; }
+.filtro-botoes { display: flex; gap: 10px; align-items: flex-end; }
 .filtro-campo label { font-size: 12px; font-weight: 600; color: #52606d; text-transform: uppercase; letter-spacing: 0.3px; }
 .filtro-campo input {
   padding: 10px; font-size: 14px; border: 1px solid #cbd2d9; border-radius: 8px; width: 100%;
