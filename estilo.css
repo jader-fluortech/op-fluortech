@@ -163,7 +163,6 @@ body {
 .op-aberta-cabecalho h2 { font-size: 22px; margin-bottom: 4px; }
 .op-aberta-cabecalho p { font-size: 14px; opacity: 0.9; }
 
-/* Ações do PCP */
 .acoes-pcp {
   background-color: #fffdf7; border: 1px solid #f2d99a; border-radius: 10px;
   padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -181,7 +180,6 @@ body {
 .nota-acoes { font-size: 13px; color: #9a6700; font-style: italic; }
 .linha-historico { font-size: 13px; color: #52606d; padding: 4px 0; }
 
-/* Aviso do modo de correção */
 .aviso-correcao {
   background-color: #eaf2f8; border: 1px solid #b9d4e6; color: #0b4f6c;
   padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 600;
@@ -198,6 +196,19 @@ body {
 .etapa-subtitulo { display: block; font-size: 12px; font-weight: 600; color: #52606d; text-transform: uppercase; letter-spacing: 0.3px; margin: 8px 0 6px; }
 .etapa-paradas { border-top: 1px dashed #d7dce1; padding-top: 10px; margin-top: 4px; }
 .parada-resumo { font-size: 13px; color: #52606d; padding: 4px 0; }
+
+/* Campos editáveis (modo correção) */
+.campo-editavel {
+  cursor: pointer; border-radius: 6px; padding: 4px 8px; margin: -4px -8px;
+  border: 1px dashed #b9d4e6; background-color: #f5f9fc; transition: background-color 0.1s;
+}
+.campo-editavel:hover { background-color: #eaf2f8; }
+.campo-editavel .rotulo { color: #0b4f6c; }
+.input-correcao {
+  font-size: 15px; padding: 6px 8px; border: 1px solid #0b4f6c; border-radius: 6px;
+  width: 100%; margin-top: 2px;
+}
+.input-correcao:focus { outline: none; box-shadow: 0 0 0 2px rgba(11,79,108,0.15); }
 
 .btn-assinatura {
   margin-top: 8px; background-color: #eef1f4; border: 1px solid #cbd2d9; color: #0b4f6c;
