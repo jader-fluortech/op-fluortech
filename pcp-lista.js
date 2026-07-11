@@ -42,6 +42,13 @@ const ROTULOS_LEGIVEIS = {
   qtdePerda: "Perdas"
 };
 
+const filtroNumero = document.getElementById("filtro-numero");
+const filtroDataDe = document.getElementById("filtro-data-de");
+const filtroDataAte = document.getElementById("filtro-data-ate");
+const btnBuscarArquivadas = document.getElementById("btn-buscar-arquivadas");
+const btnLimparArquivadas = document.getElementById("btn-limpar-arquivadas");
+const msgFiltro = document.getElementById("msg-filtro");
+
 let opsCarregadas = [];
 let opNoResumo = null;
 let modoCorrecao = false;
