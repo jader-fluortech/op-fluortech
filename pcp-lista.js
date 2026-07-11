@@ -1,9 +1,9 @@
 // ==========================================================
-//  Lista de OPs no PCP + resumo completo da OP
+//  Lista de OPs no PCP + resumo completo + ação de arquivar
 // ==========================================================
 
 import { db } from "./firebase.js";
-import { collection, onSnapshot }
+import { collection, onSnapshot, doc, getDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const MOTIVOS_PARADA = {
@@ -34,6 +34,36 @@ const conteudoResumo = document.getElementById("conteudo-resumo");
 const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 
 let opsCarregadas = [];
+let opNoResumo = null;
+
+// ---- Janela de confirmação (criada dinamicamente) ----
+let modalPcp, modalPcpTexto, modalPcpCancelar, modalPcpConfirmar, acaoConfirmarPcp;
+function prepararModal() {
+  modalPcp = document.createElement("div");
+  modalPcp.className = "modal-fundo";
+  modalPcp.style.display = "none";
+  modalPcp.innerHTML =
+    "<div class='modal-caixa'><p id='modal-pcp-texto' class='modal-texto'></p>" +
+    "<div class='modal-botoes'><button id='modal-pcp-cancelar' class='modal-btn-cancelar'>Cancelar</button>" +
+    "<button id='modal-pcp-confirmar' class='modal-btn-confirmar'>Confirmar</button></div></div>";
+  document.body.appendChild(modalPcp);
+  modalPcpTexto = document.getElementById("modal-pcp-texto");
+  modalPcpCancelar = document.getElementById("modal-pcp-cancelar");
+  modalPcpConfirmar = document.getElementById("modal-pcp-confirmar");
+  modalPcpCancelar.addEventListener("click", fecharModalPcp);
+  modalPcpConfirmar.addEventListener("click", function () {
+    const acao = acaoConfirmarPcp;
+    fecharModalPcp();
+    if (acao) acao();
+  });
+}
+function confirmarPcp(texto, aoConfirmar) {
+  modalPcpTexto.textContent = texto;
+  acaoConfirmarPcp = aoConfirmar;
+  modalPcp.style.display = "flex";
+}
+function fecharModalPcp() { modalPcp.style.display = "none"; acaoConfirmarPcp = null; }
+prepararModal();
 
 onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   opsCarregadas = [];
@@ -85,16 +115,13 @@ function renderizarGrupo(container, elementoVazio, ops) {
   });
 }
 
-// ----------------------------------------------------------
-//  Resumo completo da OP
-// ----------------------------------------------------------
 function abrirResumo(op) {
+  opNoResumo = op;
   conteudoResumo.innerHTML = montarResumo(op);
   pcpPrincipal.style.display = "none";
   pcpResumo.style.display = "block";
   window.scrollTo(0, 0);
 
-  // Botões "ver assinatura"
   conteudoResumo.querySelectorAll(".btn-assinatura").forEach(function (btn) {
     btn.addEventListener("click", function () {
       const alvo = document.getElementById(btn.getAttribute("data-alvo"));
@@ -102,15 +129,62 @@ function abrirResumo(op) {
       else { alvo.style.display = "none"; btn.textContent = "Ver assinatura"; }
     });
   });
+
+  // Botão arquivar (só quando aguardando PCP)
+  const btnArquivar = document.getElementById("btn-arquivar");
+  if (btnArquivar) {
+    btnArquivar.addEventListener("click", function () {
+      confirmarPcp("Deseja arquivar esta OP? Ela será marcada como finalizada em definitivo.", arquivarOP);
+    });
+  }
 }
 
 btnVoltarPcp.addEventListener("click", function () {
   pcpResumo.style.display = "none";
   pcpPrincipal.style.display = "block";
   conteudoResumo.innerHTML = "";
+  opNoResumo = null;
   montarListas(opsCarregadas);
   window.scrollTo(0, 0);
 });
+
+// ----------------------------------------------------------
+//  Ação: arquivar a OP (registra autor e data)
+// ----------------------------------------------------------
+async function arquivarOP() {
+  if (!opNoResumo) return;
+  try {
+    const referencia = doc(db, "ordens_producao", opNoResumo._id);
+    const emailPcp = window.emailPcpLogado || "desconhecido";
+
+    // Registro da ação (início da trilha de auditoria)
+    const registro = {
+      acao: "arquivou",
+      autor: emailPcp,
+      em: new Date().toISOString()
+    };
+    const atual = await getDoc(referencia);
+    const historico = (atual.data().historicoPcp) || [];
+    historico.push(registro);
+
+    await updateDoc(referencia, {
+      status: "finalizada_arquivada",
+      arquivadaEm: new Date().toISOString(),
+      arquivadaPor: emailPcp,
+      historicoPcp: historico
+    });
+
+    // Volta para a lista
+    pcpResumo.style.display = "none";
+    pcpPrincipal.style.display = "block";
+    conteudoResumo.innerHTML = "";
+    opNoResumo = null;
+    window.scrollTo(0, 0);
+  } catch (erro) {
+    console.error("Erro ao arquivar OP:", erro);
+    alert("Não foi possível arquivar a OP: " + erro.message);
+  }
+}
 
 function montarResumo(op) {
   const info = statusDaOP(op);
@@ -119,7 +193,14 @@ function montarResumo(op) {
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
-  // Dados da OP
+  // Ações do PCP (só quando aguardando PCP)
+  if (op.status === "finalizada_aguardando_pcp") {
+    html += "<div class='acoes-pcp'>";
+    html += "<button id='btn-arquivar' class='botao-arquivar'>Arquivar OP</button>";
+    html += "<span class='nota-acoes'>A opção “Corrigir OP” será adicionada em breve.</span>";
+    html += "</div>";
+  }
+
   html += "<div class='cartao'><h3>Dados da OP</h3><div class='campos'>";
   html += campo("Número da OP", op.numero);
   html += campoLargo("Cliente", op.cliente);
@@ -145,16 +226,22 @@ function montarResumo(op) {
     html += "</div>";
   }
 
-  // Etapas — todas abertas em sequência
   html += "<div class='cartao'><h3>Etapas e apontamentos</h3>";
   if (op.etapas && op.etapas.length > 0) {
-    op.etapas.forEach(function (etapa, indice) {
-      html += montarEtapaResumo(etapa, indice);
-    });
+    op.etapas.forEach(function (etapa, indice) { html += montarEtapaResumo(etapa, indice); });
   } else {
     html += "<p class='texto-vazio'>Sem etapas registradas.</p>";
   }
   html += "</div>";
+
+  // Histórico de ações do PCP (se houver)
+  if (op.historicoPcp && op.historicoPcp.length > 0) {
+    html += "<div class='cartao'><h3>Histórico do PCP</h3>";
+    op.historicoPcp.forEach(function (h) {
+      html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> " + h.acao + "</p>";
+    });
+    html += "</div>";
+  }
 
   return html;
 }
@@ -169,8 +256,7 @@ function montarEtapaResumo(etapa, indice) {
   let h = "<div class='etapa-resumo'>";
   h += "<div class='etapa-resumo-topo'>";
   h += "<span class='etapa-nome'>" + (indice + 1) + ". " + (etapa.operacao || "Etapa") + "</span>";
-  h += "<span class='selo-status " + classeSelo + "'>" + statusEtapa + "</span>";
-  h += "</div>";
+  h += "<span class='selo-status " + classeSelo + "'>" + statusEtapa + "</span></div>";
   h += "<span class='etapa-recurso'>" + (etapa.recurso || "") + (etapa.recursoCodigo ? " (" + etapa.recursoCodigo + ")" : "") + "</span>";
 
   if (etapa.status === "pendente") {
@@ -178,7 +264,6 @@ function montarEtapaResumo(etapa, indice) {
     return h;
   }
 
-  // Operador + horários
   h += "<div class='campos etapa-campos'>";
   h += campo("Operador", etapa.operadorNome);
   h += campo("OP aberta em", formatarDataHora(etapa.horarioAbertura));
@@ -186,7 +271,6 @@ function montarEtapaResumo(etapa, indice) {
   h += campo("Etapa concluída em", formatarDataHora(etapa.horarioFimEtapa));
   h += "</div>";
 
-  // Apontamento
   h += "<div class='campos etapa-campos'>";
   h += campo("Hora início (apontada)", ap.horaInicio);
   h += campo("Hora fim (apontada)", ap.horaFim);
@@ -195,7 +279,6 @@ function montarEtapaResumo(etapa, indice) {
   h += campoLargo("Motivo da perda", ap.motivoPerda ? (ap.motivoPerda + " — " + (MOTIVOS_PERDA[ap.motivoPerda] || "")) : null);
   h += "</div>";
 
-  // Paradas
   if (ap.paradas && ap.paradas.length > 0) {
     h += "<div class='etapa-paradas'><span class='etapa-subtitulo'>Paradas</span>";
     ap.paradas.forEach(function (p, i) {
@@ -205,24 +288,19 @@ function montarEtapaResumo(etapa, indice) {
     h += "</div>";
   }
 
-  // Assinatura (expansível)
   if (etapa.operadorAssinatura) {
     const idImg = "assin-" + indice;
     h += "<button class='btn-assinatura' data-alvo='" + idImg + "'>Ver assinatura</button>";
     h += "<div id='" + idImg + "' class='assinatura-img' style='display:none;'>";
-    h += "<img src='" + etapa.operadorAssinatura + "' alt='Assinatura do operador'>";
-    h += "</div>";
+    h += "<img src='" + etapa.operadorAssinatura + "' alt='Assinatura do operador'></div>";
   }
 
   h += "</div>";
   return h;
 }
 
-// ----------------------------------------------------------
-//  Status
-// ----------------------------------------------------------
 function statusDaOP(op) {
-  if (op.status === "finalizada") return { texto: "Finalizada", classe: "st-finalizada", selo: "selo-finalizada" };
+  if (op.status === "finalizada_arquivada") return { texto: "Finalizada – arquivada", classe: "st-finalizada", selo: "selo-finalizada" };
   if (op.status === "finalizada_aguardando_pcp") return { texto: "Finalizada – aguardando PCP", classe: "st-aguardando", selo: "selo-aguardando" };
   const etapa = etapaAtualDa(op);
   const nomeEtapa = etapa ? etapa.operacao : "—";
@@ -232,9 +310,6 @@ function statusDaOP(op) {
   return { texto: "Ativa — " + nomeEtapa + ": aguardando alocação", classe: "st-ativa", selo: "selo-livre" };
 }
 
-// ----------------------------------------------------------
-//  Auxiliares
-// ----------------------------------------------------------
 function dataAberturaOP(op) {
   if (!op.etapas) return null;
   for (let i = 0; i < op.etapas.length; i++) {
