@@ -394,7 +394,7 @@ function montarResumo(op, emCorrecao) {
 
   if (op.historicoPcp && op.historicoPcp.length > 0) {
     html += "<div class='cartao'><h3>Histórico do PCP</h3>";
-    op.historicoPcp.forEach(function (h) {
+    op.historicoPcp.slice().reverse().forEach(function (h) {
       if (h.acao === "corrigiu" && h.mudancas && h.mudancas.length > 0) {
         html += "<div class='bloco-historico'>";
         html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> corrigiu:</p>";
