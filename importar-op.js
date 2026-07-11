@@ -18,6 +18,33 @@ const btnFecharImportar = document.getElementById("btn-fechar-importar");
 
 let opAtual = null;
 
+const areaDocs = document.getElementById("area-docs-importar");
+const inputDocs = document.getElementById("docs-importar");
+const listaDocs = document.getElementById("lista-docs-importar");
+let docsEscolhidos = [];   // arquivos escolhidos, ainda não enviados
+
+inputDocs.addEventListener("change", function (evento) {
+  const arquivos = Array.from(evento.target.files);
+  arquivos.forEach(function (arq) { docsEscolhidos.push(arq); });
+  inputDocs.value = "";   // permite escolher o mesmo arquivo de novo se remover
+  desenharListaDocs();
+});
+
+function desenharListaDocs() {
+  let html = "";
+  docsEscolhidos.forEach(function (arq, i) {
+    html += "<div class='doc-item'><span class='doc-nome'>" + arq.name + "</span>";
+    html += "<button class='doc-remover' data-i='" + i + "'>×</button></div>";
+  });
+  listaDocs.innerHTML = html;
+  listaDocs.querySelectorAll(".doc-remover").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      docsEscolhidos.splice(parseInt(btn.getAttribute("data-i"), 10), 1);
+      desenharListaDocs();
+    });
+  });
+}
+
 // ---- Abrir / fechar o modal ----
 btnAbrirImportar.addEventListener("click", function () {
   limparUpload();
