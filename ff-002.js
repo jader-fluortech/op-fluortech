@@ -1,41 +1,28 @@
 // ==========================================================
 //  FF-002 — Controle de Peças no Tamboreamento
-//  Lista registros dos últimos 30 dias + inclui novos registros
+//  Tabela com linha editável no topo (inclui novos registros na própria tela)
 // ==========================================================
 
 import { db } from "./firebase.js";
 import {
-  collection, onSnapshot, addDoc, doc, getDoc, updateDoc, getDocs, query, where
+  collection, onSnapshot, addDoc, doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const CODIGO_FF = "ff002";
 const NOME_FF = "Controle de Peças no Tamboreamento";
+const NUM_COLUNAS = 11; // total de colunas da tabela
 
 const statusConexao = document.getElementById("status-conexao");
 const btnNovoRegistro = document.getElementById("btn-novo-registro");
-const listaRegistros = document.getElementById("lista-registros");
+const corpoTabela = document.getElementById("corpo-tabela");
 const vazioRegistros = document.getElementById("vazio-registros");
 
-const modalRegistro = document.getElementById("modal-registro");
-const btnFecharRegistro = document.getElementById("btn-fechar-registro");
-const btnSalvarRegistro = document.getElementById("btn-salvar-registro");
-const msgRegistro = document.getElementById("msg-registro");
-
-const regOp = document.getElementById("reg-op");
-const regCliente = document.getElementById("reg-cliente");
-const regData = document.getElementById("reg-data");
-const regMaquina = document.getElementById("reg-maquina");
-const regQtdeTotal = document.getElementById("reg-qtde-total");
-const regQtdeParcial = document.getElementById("reg-qtde-parcial");
-const regHoraInicial = document.getElementById("reg-hora-inicial");
-const regHoraFinal = document.getElementById("reg-hora-final");
-const regObservacoes = document.getElementById("reg-observacoes");
-const regResponsavel = document.getElementById("reg-responsavel");
-
-let opsDisponiveis = [];   // OPs não arquivadas, para o select
+let opsDisponiveis = [];      // OPs não arquivadas, para o dropdown
+let registrosAtuais = [];     // registros dos últimos 30 dias
+let linhaNovaAberta = false;  // controla "só uma linha nova por vez"
 
 // ----------------------------------------------------------
-//  Carrega as OPs (para o select) — todas menos arquivadas
+//  Carrega as OPs (para o dropdown) — todas menos arquivadas
 // ----------------------------------------------------------
 onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   opsDisponiveis = [];
@@ -47,25 +34,8 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   opsDisponiveis.sort(function (a, b) {
     return String(a.numero || "").localeCompare(String(b.numero || ""));
   });
-  preencherSelectOps();
 }, function (erro) {
   console.error("Erro ao carregar OPs:", erro);
-});
-
-function preencherSelectOps() {
-  const selecionado = regOp.value;
-  let html = "<option value=''>Selecione a OP…</option>";
-  opsDisponiveis.forEach(function (op) {
-    html += "<option value='" + op._id + "'>OP " + (op.numero || "—") + "</option>";
-  });
-  regOp.innerHTML = html;
-  if (selecionado) regOp.value = selecionado;
-}
-
-// Ao escolher a OP, preenche o cliente automaticamente
-regOp.addEventListener("change", function () {
-  const op = opsDisponiveis.find(function (o) { return o._id === regOp.value; });
-  regCliente.textContent = op ? (op.cliente || "—") : "—";
 });
 
 // ----------------------------------------------------------
@@ -73,102 +43,131 @@ regOp.addEventListener("change", function () {
 // ----------------------------------------------------------
 onSnapshot(collection(db, "registros_ff"), function (resultado) {
   const limite = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const registros = [];
+  registrosAtuais = [];
   resultado.forEach(function (documento) {
     const d = documento.data();
     if (d.ff !== CODIGO_FF) return;
     const t = d.criadoEm ? new Date(d.criadoEm).getTime() : 0;
-    if (t >= limite) { d._id = documento.id; registros.push(d); }
+    if (t >= limite) { d._id = documento.id; registrosAtuais.push(d); }
   });
-  registros.sort(function (a, b) {
+  registrosAtuais.sort(function (a, b) {
     return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime();
   });
-  desenharRegistros(registros);
-  statusConexao.textContent = "✅ Conectado. " + registros.length + " registro(s) nos últimos 30 dias.";
+  desenharTabela();
+  statusConexao.textContent = "✅ Conectado. " + registrosAtuais.length + " registro(s) nos últimos 30 dias.";
 }, function (erro) {
   console.error("Erro ao carregar registros:", erro);
   statusConexao.textContent = "❌ Não foi possível carregar os registros.";
   statusConexao.className = "status erro-msg";
 });
 
-function desenharRegistros(registros) {
-  if (registros.length === 0) {
-    listaRegistros.innerHTML = "";
-    vazioRegistros.style.display = "block";
-    return;
-  }
-  vazioRegistros.style.display = "none";
+// ----------------------------------------------------------
+//  Desenha a tabela (linha nova no topo, se aberta, + registros)
+// ----------------------------------------------------------
+function desenharTabela() {
   let html = "";
-  registros.forEach(function (r) {
+
+  if (linhaNovaAberta) html += montarLinhaNova();
+
+  registrosAtuais.forEach(function (r) {
     const c = r.campos || {};
-    html += "<div class='registro-card'>";
-    html += "<div class='registro-topo'><span class='registro-op'>OP " + (r.numeroOp || "—") + "</span>";
-    html += "<span class='registro-data'>" + (c.data || "—") + "</span></div>";
-    html += "<p class='registro-cliente'>" + (r.cliente || "—") + "</p>";
-    html += "<div class='registro-campos'>";
-    html += "<span><strong>Máquina:</strong> " + (c.maquina || "—") + "</span>";
-    html += "<span><strong>Qtde total:</strong> " + (c.qtdeTotal || "—") + "</span>";
-    html += "<span><strong>Qtde parcial:</strong> " + (c.qtdeParcial || "—") + "</span>";
-    html += "<span><strong>Início:</strong> " + (c.horaInicial || "—") + "</span>";
-    html += "<span><strong>Fim:</strong> " + (c.horaFinal || "—") + "</span>";
-    html += "</div>";
-    if (c.observacoes) html += "<p class='registro-obs'>“" + c.observacoes + "”</p>";
-    html += "<p class='registro-resp'>Responsável: " + (r.responsavel || "—") + " · registrado em " + formatarDataHora(r.criadoEm) + "</p>";
-    html += "</div>";
+    html += "<tr>";
+    html += "<td>" + tx(c.data) + "</td>";
+    html += "<td>" + tx(r.cliente) + "</td>";
+    html += "<td>" + tx(r.numeroOp) + "</td>";
+    html += "<td>" + tx(c.qtdeTotal) + "</td>";
+    html += "<td>" + tx(c.qtdeParcial) + "</td>";
+    html += "<td>" + tx(c.maquina) + "</td>";
+    html += "<td>" + tx(c.horaInicial) + "</td>";
+    html += "<td>" + tx(c.horaFinal) + "</td>";
+    html += "<td>" + tx(r.responsavel) + "</td>";
+    html += "<td class='col-diario'>" + tx(c.observacoes) + "</td>";
+    html += "<td class='col-acoes'></td>";
+    html += "</tr>";
   });
-  listaRegistros.innerHTML = html;
+
+  corpoTabela.innerHTML = html;
+
+  // Se há registros ou linha nova, esconde o "vazio"
+  const temConteudo = registrosAtuais.length > 0 || linhaNovaAberta;
+  vazioRegistros.style.display = temConteudo ? "none" : "block";
+
+  if (linhaNovaAberta) ligarLinhaNova();
+}
+
+function montarLinhaNova() {
+  let opcoes = "<option value=''>Selecione…</option>";
+  opsDisponiveis.forEach(function (op) {
+    opcoes += "<option value='" + op._id + "'>OP " + tx(op.numero) + "</option>";
+  });
+
+  let h = "<tr class='linha-nova'>";
+  h += "<td><input type='date' id='n-data' class='in-mini'></td>";
+  h += "<td><span id='n-cliente' class='cliente-auto'>—</span></td>";
+  h += "<td><select id='n-op' class='in-mini'>" + opcoes + "</select></td>";
+  h += "<td><input type='number' id='n-qtotal' class='in-mini' inputmode='numeric' min='0'></td>";
+  h += "<td><input type='number' id='n-qparcial' class='in-mini' inputmode='numeric' min='0'></td>";
+  h += "<td><input type='text' id='n-maquina' class='in-mini' inputmode='numeric'></td>";
+  h += "<td><input type='time' id='n-hini' class='in-mini'></td>";
+  h += "<td><input type='time' id='n-hfim' class='in-mini'></td>";
+  h += "<td><input type='text' id='n-resp' class='in-mini' placeholder='Nome e sobrenome'></td>";
+  h += "<td><input type='text' id='n-obs' class='in-mini' placeholder='Observações'></td>";
+  h += "<td class='col-acoes'>";
+  h += "<button id='n-salvar' class='btn-linha-salvar'>Salvar</button>";
+  h += "<button id='n-cancelar' class='btn-linha-cancelar'>Cancelar</button>";
+  h += "</td></tr>";
+  return h;
+}
+
+function ligarLinhaNova() {
+  const nData = document.getElementById("n-data");
+  // pré-preenche data com hoje
+  if (nData && !nData.value) nData.value = new Date().toISOString().slice(0, 10);
+
+  const nOp = document.getElementById("n-op");
+  const nCliente = document.getElementById("n-cliente");
+  nOp.addEventListener("change", function () {
+    const op = opsDisponiveis.find(function (o) { return o._id === nOp.value; });
+    nCliente.textContent = op ? tx(op.cliente) : "—";
+  });
+
+  document.getElementById("n-cancelar").addEventListener("click", function () {
+    linhaNovaAberta = false;
+    desenharTabela();
+  });
+  document.getElementById("n-salvar").addEventListener("click", salvarLinhaNova);
 }
 
 // ----------------------------------------------------------
-//  Abrir / fechar o modal
+//  Abrir a linha nova
 // ----------------------------------------------------------
-btnNovoRegistro.addEventListener("click", abrirModal);
-btnFecharRegistro.addEventListener("click", fecharModal);
-modalRegistro.addEventListener("click", function (e) { if (e.target === modalRegistro) fecharModal(); });
-
-function abrirModal() {
-  limparFormulario();
-  // pré-preenche a data com hoje
-  const hoje = new Date();
-  regData.value = hoje.toISOString().slice(0, 10);
-  modalRegistro.style.display = "flex";
-}
-function fecharModal() { modalRegistro.style.display = "none"; }
-
-function limparFormulario() {
-  regOp.value = "";
-  regCliente.textContent = "—";
-  regData.value = "";
-  regMaquina.value = "";
-  regQtdeTotal.value = "";
-  regQtdeParcial.value = "";
-  regHoraInicial.value = "";
-  regHoraFinal.value = "";
-  regObservacoes.value = "";
-  regResponsavel.value = "";
-  msgRegistro.textContent = "";
-}
+btnNovoRegistro.addEventListener("click", function () {
+  if (linhaNovaAberta) return; // só uma por vez
+  linhaNovaAberta = true;
+  desenharTabela();
+  const wrap = document.querySelector(".tabela-wrap");
+  if (wrap) wrap.scrollTop = 0;
+});
 
 // ----------------------------------------------------------
-//  Salvar o registro
+//  Salvar a linha nova
 // ----------------------------------------------------------
-btnSalvarRegistro.addEventListener("click", salvarRegistro);
+async function salvarLinhaNova() {
+  const opId = document.getElementById("n-op").value;
+  const op = opsDisponiveis.find(function (o) { return o._id === opId; });
+  const data = document.getElementById("n-data").value;
+  const responsavel = document.getElementById("n-resp").value.trim();
 
-async function salvarRegistro() {
-  const op = opsDisponiveis.find(function (o) { return o._id === regOp.value; });
-  const responsavel = regResponsavel.value.trim();
-
-  // Validações
-  if (!op) { erroMsg("Selecione a Ordem de Produção."); return; }
-  if (!regData.value) { erroMsg("Informe a data."); return; }
-  if (!responsavel) { erroMsg("Informe o responsável."); return; }
+  if (!op) { alert("Selecione a Ordem de Produção."); return; }
+  if (!data) { alert("Informe a data."); return; }
+  if (!responsavel) { alert("Informe o responsável."); return; }
   if (responsavel.split(/\s+/).filter(function (p) { return p.length > 0; }).length < 2) {
-    erroMsg("Digite nome e sobrenome do responsável."); return;
+    alert("Digite nome e sobrenome do responsável."); return;
   }
 
-  btnSalvarRegistro.disabled = true;
-  msgRegistro.textContent = "Salvando…";
-  msgRegistro.className = "msg-salvar";
+  const btnSalvar = document.getElementById("n-salvar");
+  btnSalvar.disabled = true;
+  btnSalvar.textContent = "Salvando…";
 
   const registro = {
     ff: CODIGO_FF,
@@ -179,56 +178,47 @@ async function salvarRegistro() {
     responsavel: responsavel,
     criadoEm: new Date().toISOString(),
     campos: {
-      data: regData.value,
-      maquina: regMaquina.value.trim(),
-      qtdeTotal: regQtdeTotal.value,
-      qtdeParcial: regQtdeParcial.value,
-      horaInicial: regHoraInicial.value,
-      horaFinal: regHoraFinal.value,
-      observacoes: regObservacoes.value.trim()
+      data: data,
+      maquina: document.getElementById("n-maquina").value.trim(),
+      qtdeTotal: document.getElementById("n-qtotal").value,
+      qtdeParcial: document.getElementById("n-qparcial").value,
+      horaInicial: document.getElementById("n-hini").value,
+      horaFinal: document.getElementById("n-hfim").value,
+      observacoes: document.getElementById("n-obs").value.trim()
     }
   };
 
   try {
-    // 1) Grava na coleção de registros de FF
     await addDoc(collection(db, "registros_ff"), registro);
-
-    // 2) Espelha na OP (seção registrosFF), para consolidar
+    // espelha na OP
     try {
       const refOp = doc(db, "ordens_producao", op._id);
       const snap = await getDoc(refOp);
       if (snap.exists()) {
         const lista = (snap.data().registrosFF) || [];
         lista.push({
-          ff: CODIGO_FF,
-          nomeFf: NOME_FF,
-          responsavel: responsavel,
-          criadoEm: registro.criadoEm,
-          campos: registro.campos
+          ff: CODIGO_FF, nomeFf: NOME_FF, responsavel: responsavel,
+          criadoEm: registro.criadoEm, campos: registro.campos
         });
         await updateDoc(refOp, { registrosFF: lista });
       }
     } catch (e2) {
       console.error("Registro salvo, mas falhou ao espelhar na OP:", e2);
     }
-
-    msgRegistro.textContent = "✅ Registro salvo com sucesso.";
-    msgRegistro.className = "msg-salvar sucesso-msg";
-    setTimeout(fecharModal, 1200);
+    linhaNovaAberta = false;
+    // o onSnapshot vai redesenhar sozinho com o novo registro
   } catch (erro) {
     console.error("Erro ao salvar registro:", erro);
-    erroMsg("Erro ao salvar: " + erro.message);
-    btnSalvarRegistro.disabled = false;
+    alert("Erro ao salvar: " + erro.message);
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = "Salvar";
   }
 }
 
-function erroMsg(texto) {
-  msgRegistro.textContent = "❌ " + texto;
-  msgRegistro.className = "msg-salvar erro-msg";
-}
-
-function formatarDataHora(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+// ----------------------------------------------------------
+//  Auxiliares
+// ----------------------------------------------------------
+function tx(v) {
+  if (v === undefined || v === null || String(v).trim() === "") return "—";
+  return String(v);
 }
