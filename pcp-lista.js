@@ -58,6 +58,7 @@ const ROTULOS_LEGIVEIS = {
 };
 
 const filtroNumero = document.getElementById("filtro-numero");
+const filtroLote = document.getElementById("filtro-lote");
 const filtroDataDe = document.getElementById("filtro-data-de");
 const filtroDataAte = document.getElementById("filtro-data-ate");
 const btnBuscarArquivadas = document.getElementById("btn-buscar-arquivadas");
