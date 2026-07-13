@@ -33,6 +33,50 @@ body {
 .botao-novo-registro:hover { background-color: #096330; }
 
 .ff-subtitulo { font-size: 16px; color: #0b4f6c; margin-bottom: 14px; }
+/* ===== Tabela de registros (espelho da planilha) ===== */
+.tabela-wrap {
+  width: 100%; overflow-x: auto; background-color: #ffffff;
+  border: 1px solid #e1e5ea; border-radius: 10px;
+}
+.tabela-ff { border-collapse: collapse; width: 100%; min-width: 900px; font-size: 13px; }
+.tabela-ff thead th {
+  background-color: #0b4f6c; color: #ffffff; font-weight: 600; text-align: left;
+  padding: 10px 12px; white-space: nowrap; position: sticky; top: 0;
+}
+.tabela-ff tbody td {
+  padding: 9px 12px; border-bottom: 1px solid #eef1f4; color: #1f2933; vertical-align: top;
+}
+.tabela-ff tbody tr:nth-child(even) td { background-color: #f8f9fb; }
+.tabela-ff .col-diario { min-width: 200px; white-space: pre-wrap; word-break: break-word; }
+.tabela-ff .col-acoes { white-space: nowrap; }
+
+/* Linha nova (editável) */
+.tabela-ff tr.linha-nova td { background-color: #fffdf7 !important; border-bottom: 2px solid #f2d99a; }
+.in-mini {
+  width: 100%; min-width: 90px; padding: 7px 8px; font-size: 13px;
+  border: 1px solid #cbd2d9; border-radius: 6px; font-family: inherit;
+}
+.in-mini:focus { outline: none; border-color: #0b4f6c; }
+.in-mini[type=number]::-webkit-inner-spin-button,
+.in-mini[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.in-mini[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.cliente-auto { font-size: 13px; font-weight: 600; color: #52606d; }
+.btn-linha-salvar {
+  background-color: #0b7a3b; color: #fff; border: none; border-radius: 6px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 6px;
+}
+.btn-linha-salvar:hover { background-color: #096330; }
+.btn-linha-salvar:disabled { background-color: #9aa5b1; cursor: default; }
+.btn-linha-cancelar {
+  background-color: #eef1f4; color: #52606d; border: 1px solid #cbd2d9; border-radius: 6px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-linha-cancelar:hover { background-color: #e1e5ea; }
+
+.vazio-tabela {
+  text-align: center; color: #9aa5b1; font-size: 14px; padding: 24px;
+  background-color: #ffffff; border: 1px dashed #cbd2d9; border-radius: 10px; margin-top: 12px;
+}
 
 /* ===== Lista de registros ===== */
 .lista-registros { display: flex; flex-direction: column; gap: 12px; }
