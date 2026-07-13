@@ -116,8 +116,14 @@
 }
 .campo-hora input:focus, .campo-ap input:focus, .campo-ap select:focus { outline: none; border-color: #0b4f6c; }
 
-.grade-apontamento { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+/* Esconde as setinhas dos campos numéricos (melhor para toque no tablet) */
+.campo-ap input[type=number]::-webkit-inner-spin-button,
+.campo-ap input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+.campo-ap input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
+.grade-apontamento { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
 .bloco-perda, .bloco-paradas { border-top: 1px solid #eef1f4; padding-top: 16px; margin-top: 4px; }
 
 .paradas-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
