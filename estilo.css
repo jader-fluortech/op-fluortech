@@ -332,6 +332,8 @@ body {
 .modal-btn-cancelar:hover { background-color: #e1e5ea; }
 .modal-btn-confirmar { background-color: #0b7a3b; color: #ffffff; }
 .modal-btn-confirmar:hover { background-color: #096330; }
+.modal-btn-descartar { background-color: #fdecea; color: #b3261e; border: 1px solid #f5c6c0; }
+.modal-btn-descartar:hover { background-color: #f9d7d3; }
 
 /* ===== Rodapé ===== */
 .rodape { text-align: center; padding: 16px; color: #9aa5b1; border-top: 1px solid #e1e5ea; margin-top: auto; }
