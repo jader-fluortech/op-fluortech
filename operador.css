@@ -153,6 +153,14 @@
 .botao-finalizar:disabled { background-color: #9aa5b1; cursor: default; }
 .msg-finalizar { margin-top: 14px; font-size: 15px; text-align: center; min-height: 20px; line-height: 1.5; }
 
+/* ===== Documentos ===== */
+.lista-docs-resumo { display: flex; flex-direction: column; gap: 8px; }
+.doc-link {
+  display: block; background-color: #f5f9fc; border: 1px solid #b9d4e6; border-radius: 8px;
+  padding: 14px 16px; font-size: 15px; color: #0b4f6c; font-weight: 600; text-decoration: none;
+}
+.doc-link:hover { background-color: #eaf2f8; }
+
 /* ===== Janela de confirmação (modal) ===== */
 .modal-fundo {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
