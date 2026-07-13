@@ -1,5 +1,6 @@
 // ==========================================================
 //  Lista de OPs no PCP — resumo, arquivar, corrigir + auditoria
+//  Correção: alterações ficam em rascunho e só gravam ao "Salvar e voltar"
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -46,9 +47,9 @@ const listaDocsNovos = document.getElementById("lista-docs-novos");
 const btnSalvarDocs = document.getElementById("btn-salvar-docs");
 const msgDocs = document.getElementById("msg-docs");
 
-let docsDaOp = [];        // documentos atuais da OP (cópia para editar)
-let docsNovos = [];       // arquivos novos escolhidos, ainda não enviados
-let docsRemovidos = [];   // nomes dos que o PCP removeu nesta sessão
+let docsDaOp = [];
+let docsNovos = [];
+let docsRemovidos = [];
 
 const ROTULOS_LEGIVEIS = {
   horaInicio: "Hora início (apontada)",
@@ -68,7 +69,7 @@ const msgFiltro = document.getElementById("msg-filtro");
 let opsCarregadas = [];
 let opNoResumo = null;
 let modoCorrecao = false;
-let mudancasSessao = [];   // acumula as alterações da sessão de correção
+let rascunho = [];   // alterações pendentes: {etapaIdx, chave, campo, de, para}
 
 document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
   botao.addEventListener("click", function () {
@@ -80,7 +81,7 @@ document.querySelectorAll(".titulo-grupo").forEach(function (botao) {
   });
 });
 
-// ---- Janela de confirmação ----
+// ---- Janela de confirmação (2 botões) ----
 let modalPcp, modalPcpTexto, modalPcpCancelar, modalPcpConfirmar, acaoConfirmarPcp, acaoCancelarPcp;
 function prepararModal() {
   modalPcp = document.createElement("div");
@@ -114,6 +115,38 @@ function confirmarPcp(texto, aoConfirmar, aoCancelar) {
 function fecharModalPcp() { modalPcp.style.display = "none"; acaoConfirmarPcp = null; acaoCancelarPcp = null; }
 prepararModal();
 
+// ---- Modal de 3 opções (Salvar / Descartar / Cancelar) ----
+let modal3, modal3Texto, acao3Salvar, acao3Descartar;
+function prepararModal3() {
+  modal3 = document.createElement("div");
+  modal3.className = "modal-fundo";
+  modal3.style.display = "none";
+  modal3.innerHTML =
+    "<div class='modal-caixa'><p id='m3-texto' class='modal-texto'></p>" +
+    "<div class='modal-botoes'>" +
+    "<button id='m3-cancelar' class='modal-btn-cancelar'>Cancelar</button>" +
+    "<button id='m3-descartar' class='modal-btn-descartar'>Descartar</button>" +
+    "<button id='m3-salvar' class='modal-btn-confirmar'>Salvar</button>" +
+    "</div></div>";
+  document.body.appendChild(modal3);
+  modal3Texto = document.getElementById("m3-texto");
+  document.getElementById("m3-cancelar").addEventListener("click", fecharModal3);
+  document.getElementById("m3-salvar").addEventListener("click", function () {
+    const a = acao3Salvar; fecharModal3(); if (a) a();
+  });
+  document.getElementById("m3-descartar").addEventListener("click", function () {
+    const a = acao3Descartar; fecharModal3(); if (a) a();
+  });
+}
+function confirmar3(texto, aoSalvar, aoDescartar) {
+  modal3Texto.textContent = texto;
+  acao3Salvar = aoSalvar;
+  acao3Descartar = aoDescartar;
+  modal3.style.display = "flex";
+}
+function fecharModal3() { modal3.style.display = "none"; acao3Salvar = null; acao3Descartar = null; }
+prepararModal3();
+
 // ---- Modal de documentos (OP já criada) ----
 function abrirModalDocs() {
   docsDaOp = (opNoResumo.documentos || []).slice();
@@ -138,7 +171,6 @@ inputDocsNovos.addEventListener("change", function (evento) {
 });
 
 function desenharDocsModal() {
-  // Documentos já anexados (com opção de remover)
   let hx = "";
   if (docsDaOp.length === 0) {
     hx = "<p class='texto-vazio'>Nenhum documento anexado ainda.</p>";
@@ -159,7 +191,6 @@ function desenharDocsModal() {
     });
   });
 
-  // Novos arquivos escolhidos (ainda não enviados)
   let hn = "";
   docsNovos.forEach(function (arq, i) {
     hn += "<div class='doc-item'><span class='doc-nome'>➕ " + arq.name + "</span>";
@@ -172,7 +203,7 @@ function desenharDocsModal() {
       desenharDocsModal();
     });
   });
-  }
+}
 
 btnSalvarDocs.addEventListener("click", salvarDocs);
 
@@ -193,7 +224,7 @@ function montarListas(ops) {
   const naoIniciadas = [];
   const emAndamento = [];
   ops.forEach(function (op) {
-    if (op.status === "finalizada_arquivada") return; // arquivadas só via busca
+    if (op.status === "finalizada_arquivada") return;
     if (dataAberturaOP(op)) emAndamento.push(op);
     else naoIniciadas.push(op);
   });
@@ -289,7 +320,7 @@ function renderizarGrupo(container, elementoVazio, ops, enxuto) {
 function abrirResumo(op) {
   opNoResumo = op;
   modoCorrecao = false;
-  mudancasSessao = [];
+  rascunho = [];
   desenharResumo();
   pcpPrincipal.style.display = "none";
   pcpResumo.style.display = "block";
@@ -298,6 +329,7 @@ function abrirResumo(op) {
 
 function desenharResumo() {
   conteudoResumo.innerHTML = montarResumo(opNoResumo, modoCorrecao);
+  atualizarBotaoVoltar();
 
   conteudoResumo.querySelectorAll(".btn-assinatura").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -315,18 +347,24 @@ function desenharResumo() {
   const btnCorrigir = document.getElementById("btn-corrigir");
   if (btnCorrigir) btnCorrigir.addEventListener("click", function () {
     modoCorrecao = true;
-    mudancasSessao = [];   // começa uma nova sessão de correção
+    rascunho = [];
     desenharResumo();
     window.scrollTo(0, 0);
   });
-
-  const btnSalvarCorrecao = document.getElementById("btn-salvar-correcao");
-  if (btnSalvarCorrecao) btnSalvarCorrecao.addEventListener("click", concluirCorrecao);
 
   const btnDocs = document.getElementById("btn-docs");
   if (btnDocs) btnDocs.addEventListener("click", abrirModalDocs);
 
   if (modoCorrecao) ligarCamposEditaveis();
+}
+
+// Ajusta o texto do botão "Voltar" conforme haja rascunho
+function atualizarBotaoVoltar() {
+  if (modoCorrecao && rascunho.length > 0) {
+    btnVoltarPcp.textContent = "Salvar e voltar";
+  } else {
+    btnVoltarPcp.textContent = "← Voltar para a lista";
+  }
 }
 
 function ligarCamposEditaveis() {
@@ -360,8 +398,8 @@ function ligarCamposEditaveis() {
         if (novo === valorAtual) return;
         confirmarPcp(
           "Alterar " + rotulo + " de \"" + (valorAtual || "vazio") + "\" para \"" + (novo || "vazio") + "\"?",
-          function () { salvarCampoSimples(etapaIdx, chave, valorAtual, novo); },
-          function () { /* cancelou */ }
+          function () { registrarRascunho(etapaIdx, chave, rotulo, valorAtual, novo, celula, valorSpan); },
+          function () { /* cancelou: mantém o valor original na tela */ }
         );
       }
       input.addEventListener("blur", finalizar);
@@ -373,78 +411,95 @@ function ligarCamposEditaveis() {
   });
 }
 
-async function salvarCampoSimples(etapaIdx, chave, valorAntigo, novoValor) {
-  try {
-    const referencia = doc(db, "ordens_producao", opNoResumo._id);
-    const atual = await getDoc(referencia);
-    const dados = atual.data();
-    if (!dados.etapas[etapaIdx].apontamentos) dados.etapas[etapaIdx].apontamentos = {};
-    dados.etapas[etapaIdx].apontamentos[chave] = novoValor;
-    await updateDoc(referencia, { etapas: dados.etapas });
-
-    // Registra a mudança na sessão (para a auditoria)
-    mudancasSessao.push({
-      etapa: etapaIdx + 1,
-      campo: ROTULOS_LEGIVEIS[chave] || chave,
-      de: valorAntigo || "vazio",
-      para: novoValor || "vazio"
+// Guarda a alteração no rascunho (não grava no banco) e reflete na tela
+function registrarRascunho(etapaIdx, chave, rotulo, valorAntigo, novoValor, celula, valorSpan) {
+  // Remove rascunho anterior do mesmo campo (se editou 2x, vale o último)
+  rascunho = rascunho.filter(function (r) {
+    return !(r.etapaIdx === etapaIdx && r.chave === chave);
+  });
+  // Descobre o valor ORIGINAL (do banco), para saber se voltou ao original
+  const original = valorOriginalCampo(etapaIdx, chave);
+  if (novoValor !== original) {
+    rascunho.push({
+      etapaIdx: etapaIdx,
+      chave: chave,
+      campo: rotulo,
+      de: original,
+      para: novoValor
     });
-
-    opNoResumo = dados;
-    opNoResumo._id = referencia.id;
-    desenharResumo();
-  } catch (erro) {
-    console.error("Erro ao salvar correção:", erro);
-    alert("Não foi possível salvar a alteração: " + erro.message);
   }
+  // Reflete na tela
+  valorSpan.textContent = novoValor || "—";
+  celula.setAttribute("data-valor", novoValor);
+  atualizarBotaoVoltar();
+}
+
+function valorOriginalCampo(etapaIdx, chave) {
+  const etapa = (opNoResumo.etapas || [])[etapaIdx];
+  const ap = (etapa && etapa.apontamentos) || {};
+  return (ap[chave] === undefined || ap[chave] === null) ? "" : String(ap[chave]);
 }
 
 btnVoltarPcp.addEventListener("click", function () {
+  // Se está corrigindo e há rascunho, oferece Salvar/Descartar/Cancelar
+  if (modoCorrecao && rascunho.length > 0) {
+    const resumoMudancas = rascunho.map(function (r) {
+      return "• Etapa " + (r.etapaIdx + 1) + " · " + r.campo + ": " + (r.de || "vazio") + " → " + (r.para || "vazio");
+    }).join("\n");
+    confirmar3(
+      "Você fez alterações nesta OP:\n\n" + resumoMudancas + "\n\nDeseja salvar?",
+      salvarRascunhoEVoltar,
+      voltarSemSalvar
+    );
+    return;
+  }
+  voltarSemSalvar();
+});
+
+function voltarSemSalvar() {
   pcpResumo.style.display = "none";
   pcpPrincipal.style.display = "block";
   conteudoResumo.innerHTML = "";
   opNoResumo = null;
   modoCorrecao = false;
-  mudancasSessao = [];
+  rascunho = [];
+  btnVoltarPcp.textContent = "← Voltar para a lista";
   montarListas(opsCarregadas);
   window.scrollTo(0, 0);
-});
+}
 
-// Encerra a sessão de correção e grava o registro agrupado no histórico
-async function concluirCorrecao() {
-  if (mudancasSessao.length === 0) {
-    modoCorrecao = false;
-    desenharResumo();
-    window.scrollTo(0, 0);
-    return;
-  }
+// Grava o rascunho no banco (valores + registro de auditoria) e volta
+async function salvarRascunhoEVoltar() {
   try {
     const referencia = doc(db, "ordens_producao", opNoResumo._id);
-    const emailPcp = window.emailPcpLogado || "desconhecido";
     const atual = await getDoc(referencia);
     const dados = atual.data();
-    const historico = dados.historicoPcp || [];
 
+    // Aplica cada alteração do rascunho nas etapas
+    rascunho.forEach(function (r) {
+      if (!dados.etapas[r.etapaIdx].apontamentos) dados.etapas[r.etapaIdx].apontamentos = {};
+      dados.etapas[r.etapaIdx].apontamentos[r.chave] = r.para;
+    });
+
+    // Registro de auditoria (agrupado)
+    const emailPcp = window.emailPcpLogado || "desconhecido";
+    const historico = dados.historicoPcp || [];
     historico.push({
       acao: "corrigiu",
       autor: emailPcp,
       em: new Date().toISOString(),
-      mudancas: mudancasSessao.slice()   // a lista de alterações da sessão
+      mudancas: rascunho.map(function (r) {
+        return { etapa: r.etapaIdx + 1, campo: r.campo, de: r.de || "vazio", para: r.para || "vazio" };
+      })
     });
 
-    await updateDoc(referencia, { historicoPcp: historico });
-
-    opNoResumo = dados;
-    opNoResumo.historicoPcp = historico;
-    opNoResumo._id = referencia.id;
+    await updateDoc(referencia, { etapas: dados.etapas, historicoPcp: historico });
   } catch (erro) {
-    console.error("Erro ao registrar histórico:", erro);
-    alert("As alterações foram salvas, mas houve um erro ao registrar o histórico: " + erro.message);
+    console.error("Erro ao salvar alterações:", erro);
+    alert("Não foi possível salvar as alterações: " + erro.message);
+    return; // não sai da tela se deu erro
   }
-  modoCorrecao = false;
-  mudancasSessao = [];
-  desenharResumo();
-  window.scrollTo(0, 0);
+  voltarSemSalvar();
 }
 
 async function arquivarOP() {
@@ -480,7 +535,6 @@ async function salvarDocs() {
   try {
     const referencia = doc(db, "ordens_producao", opNoResumo._id);
 
-    // Sobe os novos arquivos
     const nomesAdicionados = [];
     for (let i = 0; i < docsNovos.length; i++) {
       const arq = docsNovos[i];
@@ -492,7 +546,6 @@ async function salvarDocs() {
       nomesAdicionados.push(arq.name);
     }
 
-    // Monta o registro de histórico (só se houve mudança)
     const emailPcp = window.emailPcpLogado || "desconhecido";
     const atual = await getDoc(referencia);
     const historico = (atual.data().historicoPcp) || [];
@@ -509,7 +562,6 @@ async function salvarDocs() {
 
     await updateDoc(referencia, { documentos: docsDaOp, historicoPcp: historico });
 
-    // Atualiza a cópia local e redesenha o resumo
     opNoResumo = atual.data();
     opNoResumo.documentos = docsDaOp;
     opNoResumo.historicoPcp = historico;
@@ -531,7 +583,6 @@ function montarResumo(op, emCorrecao) {
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
-  // Botão Documentos (ativas e aguardando PCP, fora do modo correção)
   if (!emCorrecao && op.status !== "finalizada_arquivada") {
     html += "<div class='acoes-docs'><button id='btn-docs' class='botao-docs'>📎 Documentos" +
       (op.documentos && op.documentos.length > 0 ? " (" + op.documentos.length + ")" : "") +
@@ -539,7 +590,7 @@ function montarResumo(op, emCorrecao) {
   }
 
   if (emCorrecao) {
-    html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento (em azul) para editá-lo.</div>";
+    html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento (em azul) para editá-lo. As alterações só serão gravadas ao clicar em “Salvar e voltar”.</div>";
   }
 
   if (op.status === "finalizada_aguardando_pcp") {
@@ -547,8 +598,6 @@ function montarResumo(op, emCorrecao) {
     if (!emCorrecao) {
       html += "<button id='btn-corrigir' class='botao-corrigir'>Corrigir OP</button>";
       html += "<button id='btn-arquivar' class='botao-arquivar'>Arquivar OP</button>";
-    } else {
-      html += "<button id='btn-salvar-correcao' class='botao-arquivar'>Salvar alterações</button>";
     }
     html += "</div>";
   }
@@ -601,12 +650,8 @@ function montarResumo(op, emCorrecao) {
         html += "<div class='bloco-historico'>";
         html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> atualizou documentos:</p>";
         html += "<ul class='lista-mudancas'>";
-        (h.adicionados || []).forEach(function (nome) {
-          html += "<li>➕ adicionou: " + nome + "</li>";
-        });
-        (h.removidos || []).forEach(function (nome) {
-          html += "<li>➖ removeu: " + nome + "</li>";
-        });
+        (h.adicionados || []).forEach(function (nome) { html += "<li>➕ adicionou: " + nome + "</li>"; });
+        (h.removidos || []).forEach(function (nome) { html += "<li>➖ removeu: " + nome + "</li>"; });
         html += "</ul></div>";
       } else if (h.acao === "corrigiu" && h.mudancas && h.mudancas.length > 0) {
         html += "<div class='bloco-historico'>";
@@ -700,11 +745,9 @@ function statusDaOP(op) {
   if (op.status === "finalizada_aguardando_pcp") return { texto: "Finalizada – aguardando PCP", classe: "st-aguardando", selo: "selo-aguardando" };
   const etapa = etapaAtualDa(op);
   const nomeEtapa = etapa ? etapa.operacao : "—";
-  // Sem nenhuma etapa aberta ainda → aguardando o primeiro operador
   if (!dataAberturaOP(op)) {
     return { texto: "Ativa — aguardando 1º operador", classe: "st-nao-iniciada", selo: "selo-cinza" };
   }
-  // Já foi aberta antes; agora depende da etapa atual
   if (etapa && etapa.status === "em_producao") {
     return { texto: "Ativa — " + nomeEtapa + ": em produção por " + (etapa.operadorNome || "operador"), classe: "st-ativa", selo: "selo-verde" };
   }
