@@ -457,6 +457,58 @@ async function arquivarOP() {
   }
 }
 
+async function salvarDocs() {
+  btnSalvarDocs.disabled = true;
+  msgDocs.textContent = "Salvando…";
+  msgDocs.className = "msg-salvar";
+  try {
+    const referencia = doc(db, "ordens_producao", opNoResumo._id);
+
+    // Sobe os novos arquivos
+    const nomesAdicionados = [];
+    for (let i = 0; i < docsNovos.length; i++) {
+      const arq = docsNovos[i];
+      const caminho = "ops/" + opNoResumo.numero + "/" + Date.now() + "_" + arq.name;
+      const referenciaArq = ref(storage, caminho);
+      await uploadBytes(referenciaArq, arq);
+      const url = await getDownloadURL(referenciaArq);
+      docsDaOp.push({ nome: arq.name, url: url, caminho: caminho });
+      nomesAdicionados.push(arq.name);
+    }
+
+    // Monta o registro de histórico (só se houve mudança)
+    const emailPcp = window.emailPcpLogado || "desconhecido";
+    const atual = await getDoc(referencia);
+    const historico = (atual.data().historicoPcp) || [];
+
+    if (nomesAdicionados.length > 0 || docsRemovidos.length > 0) {
+      historico.push({
+        acao: "documentos",
+        autor: emailPcp,
+        em: new Date().toISOString(),
+        adicionados: nomesAdicionados,
+        removidos: docsRemovidos.slice()
+      });
+    }
+
+    await updateDoc(referencia, { documentos: docsDaOp, historicoPcp: historico });
+
+    // Atualiza a cópia local e redesenha o resumo
+    opNoResumo = atual.data();
+    opNoResumo.documentos = docsDaOp;
+    opNoResumo.historicoPcp = historico;
+    opNoResumo._id = referencia.id;
+
+    fecharModalDocs();
+    desenharResumo();
+  } catch (erro) {
+    console.error("Erro ao salvar documentos:", erro);
+    msgDocs.textContent = "❌ Erro ao salvar: " + erro.message;
+    msgDocs.className = "msg-salvar erro-msg";
+    btnSalvarDocs.disabled = false;
+  }
+}
+
 function montarResumo(op, emCorrecao) {
   const info = statusDaOP(op);
   let html = "";
