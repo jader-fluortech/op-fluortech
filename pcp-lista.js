@@ -318,6 +318,7 @@ function desenharResumo() {
   if (btnDocs) btnDocs.addEventListener("click", abrirModalDocs);
 
   if (modoCorrecao) ligarCamposEditaveis();
+}
 
 function ligarCamposEditaveis() {
   conteudoResumo.querySelectorAll(".campo-editavel").forEach(function (celula) {
