@@ -256,6 +256,16 @@ body {
 .botao-corrigir:hover { background-color: #0a4459; }
 .nota-acoes { font-size: 13px; color: #9a6700; font-style: italic; }
 .linha-historico { font-size: 13px; color: #52606d; padding: 4px 0; }
+.acoes-docs { margin-bottom: 16px; }
+.botao-docs {
+  background-color: #eef1f4; color: #0b4f6c; border: 1px solid #cbd2d9; border-radius: 8px;
+  padding: 12px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.botao-docs:hover { background-color: #e1e5ea; }
+.doc-nome-link {
+  flex: 1; font-size: 14px; color: #0b4f6c; font-weight: 600; text-decoration: none; overflow-wrap: anywhere;
+}
+.doc-nome-link:hover { text-decoration: underline; }
 .bloco-historico { padding: 6px 0; border-bottom: 1px solid #eef1f4; }
 .bloco-historico:last-child { border-bottom: none; }
 .lista-mudancas { list-style: none; margin: 6px 0 4px 0; padding-left: 12px; }
