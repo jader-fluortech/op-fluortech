@@ -209,11 +209,12 @@ btnLimparArquivadas.addEventListener("click", limparFiltros);
 
 function buscarArquivadas() {
   const num = filtroNumero.value.trim().toLowerCase();
+  const lote = filtroLote.value.trim().toLowerCase();
   const de = filtroDataDe.value ? new Date(filtroDataDe.value + "T00:00:00").getTime() : null;
   const ate = filtroDataAte.value ? new Date(filtroDataAte.value + "T23:59:59").getTime() : null;
 
-  if (!num && !de && !ate) {
-    msgFiltro.textContent = "Preencha o número da OP ou uma data para buscar.";
+  if (!num && !lote && !de && !ate) {
+    msgFiltro.textContent = "Preencha o número da OP, o lote ou uma data para buscar.";
     msgFiltro.className = "msg-filtro erro-msg";
     listaArquivadas.innerHTML = "";
     vazioArquivadas.style.display = "none";
