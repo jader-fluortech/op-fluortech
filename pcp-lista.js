@@ -5,6 +5,8 @@
 import { db } from "./firebase.js";
 import { collection, onSnapshot, doc, getDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { storage } from "./firebase.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
 
 const MOTIVOS_PARADA = {
   AF: "Construir/ajuste/troca ferramenta", AM: "Ajustar máquina", CA: "Falta calibrador",
