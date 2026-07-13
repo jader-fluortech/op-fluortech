@@ -225,6 +225,12 @@ function buscarArquivadas() {
   const arquivadas = opsCarregadas.filter(function (op) {
     if (op.status !== "finalizada_arquivada") return false;
     if (num && !(op.numero || "").toLowerCase().includes(num)) return false;
+    if (lote) {
+      const temLote = (op.materiaPrima || []).some(function (mp) {
+        return (mp.lote || "").toLowerCase().includes(lote);
+      });
+      if (!temLote) return false;
+    }
     if (de || ate) {
       const t = textoData(op.arquivadaEm);
       if (de && t < de) return false;
