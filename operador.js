@@ -429,6 +429,11 @@ async function iniciarEtapa() {
   const msg = document.getElementById("msg-iniciar");
   const nome = document.getElementById("nome-operador").value.trim();
   if (!nome) { msg.textContent = "Digite seu nome completo."; msg.className = "msg-iniciar erro-msg"; return; }
+  if (nome.split(/\s+/).filter(function (p) { return p.length > 0; }).length < 2) {
+    msg.textContent = "Digite nome e sobrenome.";
+    msg.className = "msg-iniciar erro-msg";
+    return;
+  }
   if (assinaturaVazia) { msg.textContent = "Assine no quadro antes de iniciar."; msg.className = "msg-iniciar erro-msg"; return; }
   botao.disabled = true; msg.textContent = "Iniciando…"; msg.className = "msg-iniciar";
   try {
