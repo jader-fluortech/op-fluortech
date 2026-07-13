@@ -310,8 +310,10 @@ function desenharResumo() {
   const btnSalvarCorrecao = document.getElementById("btn-salvar-correcao");
   if (btnSalvarCorrecao) btnSalvarCorrecao.addEventListener("click", concluirCorrecao);
 
+  const btnDocs = document.getElementById("btn-docs");
+  if (btnDocs) btnDocs.addEventListener("click", abrirModalDocs);
+
   if (modoCorrecao) ligarCamposEditaveis();
-}
 
 function ligarCamposEditaveis() {
   conteudoResumo.querySelectorAll(".campo-editavel").forEach(function (celula) {
