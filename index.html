@@ -136,6 +136,26 @@
       </div>
     </div>
 
+  <!-- MODAL DE DOCUMENTOS (OP já criada) -->
+    <div id="modal-docs" class="modal-fundo" style="display:none;">
+      <div class="modal-caixa modal-importar-caixa">
+        <div class="modal-importar-topo">
+          <h2>Documentos da OP</h2>
+          <button id="btn-fechar-docs" class="modal-fechar">×</button>
+        </div>
+        <div id="docs-existentes" class="lista-docs-resumo"></div>
+        <div class="area-docs">
+          <label for="docs-novos" class="botao-escolher-docs">Escolher arquivos</label>
+          <input type="file" id="docs-novos" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none;">
+          <div id="lista-docs-novos" class="lista-docs"></div>
+        </div>
+        <div class="area-salvar">
+          <button id="btn-salvar-docs" class="botao-salvar">Salvar</button>
+          <p id="msg-docs" class="msg-salvar"></p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <footer class="rodape">
