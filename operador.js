@@ -212,7 +212,7 @@ function montarApontamento(op) {
   html += "<input type='time' id='hora-inicio' value='" + (ap.horaInicio || "") + "'></div></div>";
   html += "<div class='grade-apontamento'>";
   html += "<div class='campo-ap'><label>Hora de fim</label><input type='time' id='hora-fim' value='" + (ap.horaFim || "") + "'></div>";
-  html += "<div class='campo-ap'><label>Qtde produzida</label><input type='number' id='qtde-produzida' value='" + (ap.qtdeProduzida || "") + "' min='0'></div></div>";
+  html += "<div class='campo-ap'><label>Qtde produzida</label><input type='number' inputmode='numeric' id='qtde-produzida' value='" + (ap.qtdeProduzida || "") + "' min='0'></div></div>";
   html += "<div class='bloco-perda'><div class='grade-apontamento'>";
   html += "<div class='campo-ap'><label>Perdas (qtde)</label><input type='number' id='qtde-perda' value='" + (ap.qtdePerda || "") + "' min='0'></div>";
   html += "<div class='campo-ap'><label>Motivo da perda</label>" + selectMotivos("motivo-perda", MOTIVOS_PERDA, ap.motivoPerda) + "</div></div></div>";
