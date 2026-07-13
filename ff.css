@@ -1,0 +1,108 @@
+/* ===== Base ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #f4f5f7; color: #1f2933;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ===== Cabeçalho ===== */
+.cabecalho {
+  background-color: #0b4f6c; color: #ffffff; padding: 20px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.cabecalho h1 { font-size: 19px; font-weight: 600; }
+.cabecalho-direita { display: flex; align-items: center; gap: 12px; }
+.ambiente {
+  background-color: #f0a500; color: #1f2933; font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 12px;
+}
+
+/* ===== Conteúdo ===== */
+.conteudo { flex: 1; padding: 24px; max-width: 900px; width: 100%; margin: 0 auto; }
+.status {
+  font-size: 14px; color: #52606d; background-color: #ffffff; padding: 10px 16px;
+  border-radius: 8px; border: 1px solid #e1e5ea; margin: 0;
+}
+
+.ff-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.botao-novo-registro {
+  background-color: #0b7a3b; color: #fff; border: none; border-radius: 8px;
+  padding: 14px 24px; font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.botao-novo-registro:hover { background-color: #096330; }
+
+.ff-subtitulo { font-size: 16px; color: #0b4f6c; margin-bottom: 14px; }
+
+/* ===== Lista de registros ===== */
+.lista-registros { display: flex; flex-direction: column; gap: 12px; }
+.registro-card {
+  background-color: #ffffff; border: 1px solid #e1e5ea; border-radius: 10px;
+  padding: 16px 18px; border-left: 5px solid #0b4f6c; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.registro-topo { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.registro-op { font-size: 16px; font-weight: 700; color: #1f2933; }
+.registro-data { font-size: 13px; color: #7b8794; }
+.registro-cliente { font-size: 14px; font-weight: 600; color: #1f2933; margin-bottom: 8px; }
+.registro-campos { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13px; color: #52606d; }
+.registro-campos span strong { color: #1f2933; }
+.registro-obs { margin-top: 8px; font-size: 13px; color: #52606d; font-style: italic; }
+.registro-resp { margin-top: 8px; font-size: 12px; color: #7b8794; }
+
+.vazio-grupo {
+  text-align: center; color: #9aa5b1; font-size: 14px; padding: 24px;
+  background-color: #ffffff; border: 1px dashed #cbd2d9; border-radius: 10px;
+}
+
+/* ===== Modal ===== */
+.modal-fundo {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(31, 41, 51, 0.55);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000;
+}
+.modal-caixa {
+  background-color: #ffffff; border-radius: 12px; padding: 24px;
+  max-width: 440px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.modal-registro-caixa { max-width: 560px; max-height: 88vh; overflow-y: auto; }
+.modal-registro-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-registro-topo h2 { font-size: 19px; color: #0b4f6c; }
+.modal-fechar {
+  background: none; border: none; font-size: 28px; line-height: 1; color: #7b8794; cursor: pointer; padding: 0 4px;
+}
+.modal-fechar:hover { color: #1f2933; }
+
+/* ===== Campos do formulário ===== */
+.campo-form { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.campo-form label { font-size: 13px; font-weight: 600; color: #52606d; }
+.campo-form input, .campo-form select, .campo-form textarea {
+  padding: 11px; font-size: 15px; border: 1px solid #cbd2d9; border-radius: 8px; width: 100%; font-family: inherit;
+}
+.campo-form input:focus, .campo-form select:focus, .campo-form textarea:focus { outline: none; border-color: #0b4f6c; }
+.campo-form input[type=number]::-webkit-inner-spin-button,
+.campo-form input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.campo-form input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.valor-auto {
+  padding: 11px; font-size: 15px; background-color: #f4f5f7; border: 1px solid #e1e5ea;
+  border-radius: 8px; color: #1f2933; font-weight: 600;
+}
+.form-linha { display: flex; gap: 12px; }
+.form-linha .campo-form { flex: 1; }
+
+/* ===== Botão salvar ===== */
+.area-salvar { margin-top: 8px; text-align: center; }
+.botao-salvar {
+  padding: 14px 28px; background-color: #0b7a3b; color: #ffffff; border: none;
+  border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%;
+}
+.botao-salvar:hover { background-color: #096330; }
+.botao-salvar:disabled { background-color: #9aa5b1; cursor: default; }
+.msg-salvar { margin-top: 12px; font-size: 14px; line-height: 1.5; min-height: 20px; }
+.erro-msg { color: #b3261e; }
+.sucesso-msg { color: #0b7a3b; }
+
+/* ===== Rodapé ===== */
+.rodape { text-align: center; padding: 16px; color: #9aa5b1; border-top: 1px solid #e1e5ea; margin-top: auto; }
+
+/* ===== Responsivo ===== */
+@media (max-width: 600px) { .form-linha { flex-direction: column; gap: 0; } }
