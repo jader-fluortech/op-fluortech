@@ -171,7 +171,6 @@ function desenharDocsModal() {
       desenharDocsModal();
     });
   });
-}
   opsCarregadas = [];
   resultado.forEach(function (documento) {
     const dados = documento.data();
