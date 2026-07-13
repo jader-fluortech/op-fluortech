@@ -515,6 +515,13 @@ function montarResumo(op, emCorrecao) {
   html += "<div class='op-aberta-cabecalho'><h2>OP " + (op.numero || "—") + "</h2>";
   html += "<p>" + info.texto + "</p></div>";
 
+  // Botão Documentos (ativas e aguardando PCP, fora do modo correção)
+  if (!emCorrecao && op.status !== "finalizada_arquivada") {
+    html += "<div class='acoes-docs'><button id='btn-docs' class='botao-docs'>📎 Documentos" +
+      (op.documentos && op.documentos.length > 0 ? " (" + op.documentos.length + ")" : "") +
+      "</button></div>";
+  }
+
   if (emCorrecao) {
     html += "<div class='aviso-correcao'>✎ Modo de correção — clique num campo de apontamento (em azul) para editá-lo.</div>";
   }
