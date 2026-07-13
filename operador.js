@@ -172,6 +172,13 @@ function montarFicha(op) {
     });
     html += "</table></div>";
   }
+  if (op.documentos && op.documentos.length > 0) {
+    html += "<div class='cartao'><h3>Documentos</h3><div class='lista-docs-resumo'>";
+    op.documentos.forEach(function (d) {
+      html += "<a class='doc-link' href='" + d.url + "' target='_blank' rel='noopener'>📄 " + d.nome + "</a>";
+    });
+    html += "</div></div>";
+  }
   if (!(etapa && etapa.status === "em_producao")) {
     html += "<div class='cartao cartao-identificacao'><h3>Identificação do operador</h3>";
     html += "<label class='rotulo-campo' for='nome-operador'>Nome completo</label>";
