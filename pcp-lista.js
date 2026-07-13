@@ -583,7 +583,18 @@ function montarResumo(op, emCorrecao) {
   if (op.historicoPcp && op.historicoPcp.length > 0) {
     html += "<div class='cartao'><h3>Histórico do PCP</h3>";
     op.historicoPcp.slice().reverse().forEach(function (h) {
-      if (h.acao === "corrigiu" && h.mudancas && h.mudancas.length > 0) {
+      if (h.acao === "documentos") {
+        html += "<div class='bloco-historico'>";
+        html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> atualizou documentos:</p>";
+        html += "<ul class='lista-mudancas'>";
+        (h.adicionados || []).forEach(function (nome) {
+          html += "<li>➕ adicionou: " + nome + "</li>";
+        });
+        (h.removidos || []).forEach(function (nome) {
+          html += "<li>➖ removeu: " + nome + "</li>";
+        });
+        html += "</ul></div>";
+      } else if (h.acao === "corrigiu" && h.mudancas && h.mudancas.length > 0) {
         html += "<div class='bloco-historico'>";
         html += "<p class='linha-historico'>" + formatarDataHora(h.em) + " — <strong>" + h.autor + "</strong> corrigiu:</p>";
         html += "<ul class='lista-mudancas'>";
