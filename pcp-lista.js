@@ -37,6 +37,19 @@ const pcpResumo = document.getElementById("pcp-resumo");
 const conteudoResumo = document.getElementById("conteudo-resumo");
 const btnVoltarPcp = document.getElementById("btn-voltar-pcp");
 
+// Modal de documentos (OP já criada)
+const modalDocs = document.getElementById("modal-docs");
+const btnFecharDocs = document.getElementById("btn-fechar-docs");
+const docsExistentes = document.getElementById("docs-existentes");
+const inputDocsNovos = document.getElementById("docs-novos");
+const listaDocsNovos = document.getElementById("lista-docs-novos");
+const btnSalvarDocs = document.getElementById("btn-salvar-docs");
+const msgDocs = document.getElementById("msg-docs");
+
+let docsDaOp = [];        // documentos atuais da OP (cópia para editar)
+let docsNovos = [];       // arquivos novos escolhidos, ainda não enviados
+let docsRemovidos = [];   // nomes dos que o PCP removeu nesta sessão
+
 const ROTULOS_LEGIVEIS = {
   horaInicio: "Hora início (apontada)",
   horaFim: "Hora fim (apontada)",
