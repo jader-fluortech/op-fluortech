@@ -113,7 +113,65 @@ function confirmarPcp(texto, aoConfirmar, aoCancelar) {
 function fecharModalPcp() { modalPcp.style.display = "none"; acaoConfirmarPcp = null; acaoCancelarPcp = null; }
 prepararModal();
 
-onSnapshot(collection(db, "ordens_producao"), function (resultado) {
+// ---- Modal de documentos (OP já criada) ----
+function abrirModalDocs() {
+  docsDaOp = (opNoResumo.documentos || []).slice();
+  docsNovos = [];
+  docsRemovidos = [];
+  msgDocs.textContent = "";
+  desenharDocsModal();
+  modalDocs.style.display = "flex";
+}
+function fecharModalDocs() {
+  modalDocs.style.display = "none";
+  docsNovos = [];
+  docsRemovidos = [];
+}
+btnFecharDocs.addEventListener("click", fecharModalDocs);
+modalDocs.addEventListener("click", function (e) { if (e.target === modalDocs) fecharModalDocs(); });
+
+inputDocsNovos.addEventListener("change", function (evento) {
+  Array.from(evento.target.files).forEach(function (arq) { docsNovos.push(arq); });
+  inputDocsNovos.value = "";
+  desenharDocsModal();
+});
+
+function desenharDocsModal() {
+  // Documentos já anexados (com opção de remover)
+  let hx = "";
+  if (docsDaOp.length === 0) {
+    hx = "<p class='texto-vazio'>Nenhum documento anexado ainda.</p>";
+  } else {
+    docsDaOp.forEach(function (d, i) {
+      hx += "<div class='doc-item'>";
+      hx += "<a class='doc-nome-link' href='" + d.url + "' target='_blank' rel='noopener'>📄 " + d.nome + "</a>";
+      hx += "<button class='doc-remover' data-i='" + i + "'>×</button></div>";
+    });
+  }
+  docsExistentes.innerHTML = hx;
+  docsExistentes.querySelectorAll(".doc-remover").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const i = parseInt(btn.getAttribute("data-i"), 10);
+      docsRemovidos.push(docsDaOp[i].nome);
+      docsDaOp.splice(i, 1);
+      desenharDocsModal();
+    });
+  });
+
+  // Novos arquivos escolhidos (ainda não enviados)
+  let hn = "";
+  docsNovos.forEach(function (arq, i) {
+    hn += "<div class='doc-item'><span class='doc-nome'>➕ " + arq.name + "</span>";
+    hn += "<button class='doc-remover-novo' data-i='" + i + "'>×</button></div>";
+  });
+  listaDocsNovos.innerHTML = hn;
+  listaDocsNovos.querySelectorAll(".doc-remover-novo").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      docsNovos.splice(parseInt(btn.getAttribute("data-i"), 10), 1);
+      desenharDocsModal();
+    });
+  });
+}
   opsCarregadas = [];
   resultado.forEach(function (documento) {
     const dados = documento.data();
