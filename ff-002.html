@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF-002 — Controle de Peças no Tamboreamento</title>
+  <link rel="stylesheet" href="ff.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>FF-002 — Controle de Peças no Tamboreamento</h1>
+    <div class="cabecalho-direita">
+      <span class="ambiente" id="ambiente">ambiente de teste</span>
+    </div>
+  </header>
+
+  <main class="conteudo">
+
+    <div class="ff-topo">
+      <p id="status-conexao" class="status">Carregando registros…</p>
+      <button id="btn-novo-registro" class="botao-novo-registro">+ Incluir novo registro</button>
+    </div>
+
+    <h2 class="ff-subtitulo">Registros dos últimos 30 dias</h2>
+    <div id="lista-registros" class="lista-registros"></div>
+    <p id="vazio-registros" class="vazio-grupo" style="display:none;">Nenhum registro nos últimos 30 dias.</p>
+
+  </main>
+
+  <!-- MODAL: novo registro -->
+  <div id="modal-registro" class="modal-fundo" style="display:none;">
+    <div class="modal-caixa modal-registro-caixa">
+      <div class="modal-registro-topo">
+        <h2>Novo registro — Tamboreamento</h2>
+        <button id="btn-fechar-registro" class="modal-fechar">×</button>
+      </div>
+
+      <div class="campo-form">
+        <label for="reg-op">Ordem de Produção</label>
+        <select id="reg-op"><option value="">Selecione a OP…</option></select>
+      </div>
+      <div class="campo-form">
+        <label>Cliente</label>
+        <div id="reg-cliente" class="valor-auto">—</div>
+      </div>
+
+      <div class="form-linha">
+        <div class="campo-form">
+          <label for="reg-data">Data</label>
+          <input type="date" id="reg-data">
+        </div>
+        <div class="campo-form">
+          <label for="reg-maquina">Nº da Máquina</label>
+          <input type="text" id="reg-maquina" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="campo-form">
+          <label for="reg-qtde-total">Qtde. Total</label>
+          <input type="number" id="reg-qtde-total" inputmode="numeric" min="0">
+        </div>
+        <div class="campo-form">
+          <label for="reg-qtde-parcial">Qtde. Parcial</label>
+          <input type="number" id="reg-qtde-parcial" inputmode="numeric" min="0">
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="campo-form">
+          <label for="reg-hora-inicial">Horário Inicial</label>
+          <input type="time" id="reg-hora-inicial">
+        </div>
+        <div class="campo-form">
+          <label for="reg-hora-final">Horário Final</label>
+          <input type="time" id="reg-hora-final">
+        </div>
+      </div>
+
+      <div class="campo-form">
+        <label for="reg-observacoes">Observações (diário de bordo)</label>
+        <textarea id="reg-observacoes" rows="3"></textarea>
+      </div>
+
+      <div class="campo-form">
+        <label for="reg-responsavel">Responsável (nome e sobrenome)</label>
+        <input type="text" id="reg-responsavel" autocomplete="off">
+      </div>
+
+      <div class="area-salvar">
+        <button id="btn-salvar-registro" class="botao-salvar">Salvar registro</button>
+        <p id="msg-registro" class="msg-salvar"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="rodape">
+    <small>Sistema interno de acompanhamento de Ordens de Produção</small>
+  </footer>
+
+  <script type="module" src="ff-002.js"></script>
+
+</body>
+</html>
