@@ -245,6 +245,7 @@ function buscarArquivadas() {
 
 function limparFiltros() {
   filtroNumero.value = "";
+  filtroLote.value = "";
   filtroDataDe.value = "";
   filtroDataAte.value = "";
   msgFiltro.textContent = "";
