@@ -171,6 +171,11 @@ function desenharDocsModal() {
       desenharDocsModal();
     });
   });
+  }
+
+btnSalvarDocs.addEventListener("click", salvarDocs);
+
+onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   opsCarregadas = [];
   resultado.forEach(function (documento) {
     const dados = documento.data();
