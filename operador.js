@@ -317,6 +317,26 @@ function camposEmBranco(ap) {
   return faltando;
 }
 
+// Carimba a data em cada horário preenchido, mantendo a data original se já existia
+function carimbarDatas(novo, anterior) {
+  anterior = anterior || {};
+  const hoje = dataLocalHoje();
+  if (novo.horaInicio) novo.horaInicioData = anterior.horaInicioData || hoje;
+  if (novo.horaFim) novo.horaFimData = anterior.horaFimData || hoje;
+  const antParadas = anterior.paradas || [];
+  novo.paradas.forEach(function (p, idx) {
+    const ant = antParadas[idx] || {};
+    if (p.inicio) p.inicioData = ant.inicioData || hoje;
+    if (p.fim) p.fimData = ant.fimData || hoje;
+  });
+  return novo;
+}
+
+function dataLocalHoje() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
 async function salvarApontamento() {
   const aviso = document.getElementById("aviso-autosave");
   try {
@@ -328,6 +348,7 @@ async function salvarApontamento() {
     if (apontamento.horaInicio && !dados.etapas[i].horarioInicioProcesso) {
       dados.etapas[i].horarioInicioProcesso = new Date().toISOString();
     }
+    carimbarDatas(apontamento, dados.etapas[i].apontamentos);
     dados.etapas[i].apontamentos = apontamento;
     await updateDoc(referencia, { etapas: dados.etapas });
     if (aviso) { aviso.textContent = "✓ salvo"; aviso.className = "aviso-autosave salvo"; }
