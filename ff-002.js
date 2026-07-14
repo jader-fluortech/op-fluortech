@@ -167,6 +167,22 @@ async function salvarLinhaNova() {
   btnSalvar.disabled = true;
   btnSalvar.textContent = "Salvando…";
 
+  // Trava extra: reconfere no banco se a OP não foi arquivada
+  try {
+    const snapOp = await getDoc(doc(db, "ordens_producao", op._id));
+    if (!snapOp.exists() || snapOp.data().status === "finalizada_arquivada") {
+      alert("Esta OP foi arquivada e não pode mais receber registros.");
+      fecharInclusao();
+      return;
+    }
+  } catch (eVerif) {
+    console.error("Erro ao verificar a OP:", eVerif);
+    alert("Não foi possível verificar a OP. Tente novamente.");
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = "Salvar";
+    return;
+  }
+
   const registro = {
     ff: CODIGO_FF,
     nomeFf: NOME_FF,
