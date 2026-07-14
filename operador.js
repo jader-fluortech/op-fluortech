@@ -209,7 +209,7 @@ function montarApontamento(op) {
   html += "<div class='linha-inicio'>";
   html += "<button id='btn-iniciar-processo' class='botao-iniciar-processo'>Iniciar processo</button>";
   html += "<div class='campo-hora'><label>Hora de início</label>";
-  html += "<input type='time' id='hora-inicio' value='" + (ap.horaInicio || "") + "'></div></div>";
+  html += "<input type='time' id='hora-inicio' value='" + (ap.horaInicio || "") + "'>" + legendaData(ap.horaInicioData) + "</div></div>";
   html += "<div class='grade-apontamento'>";
   html += "<div class='campo-ap'><label>Hora de fim</label><input type='time' id='hora-fim' value='" + (ap.horaFim || "") + "'></div>";
   html += "<div class='campo-ap'><label>Qtde produzida</label><input type='number' inputmode='numeric' id='qtde-produzida' value='" + (ap.qtdeProduzida || "") + "' min='0'></div></div>";
