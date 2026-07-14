@@ -149,4 +149,39 @@ body {
 .rodape { text-align: center; padding: 16px; color: #9aa5b1; border-top: 1px solid #e1e5ea; margin-top: auto; }
 
 /* ===== Responsivo ===== */
-@media (max-width: 600px) { .form-linha { flex-direction: column; gap: 0; } }
+/* ===== Abas da FF ===== */
+.abas-ff { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 2px solid #e1e5ea; }
+.aba-btn {
+  background: none; border: none; padding: 12px 22px; font-size: 15px; font-weight: 600;
+  color: #7b8794; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+}
+.aba-btn:hover { color: #0b4f6c; }
+.aba-btn.ativa { color: #0b4f6c; border-bottom-color: #0b4f6c; }
+
+/* ===== Área de inclusão com assinaturas ===== */
+.area-inclusao-ff { margin-bottom: 24px; }
+.area-assinaturas { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
+.bloco-assin {
+  display: flex; flex-direction: column; gap: 6px;
+  background-color: #fffdf7; border: 1px solid #f2d99a; border-radius: 8px; padding: 12px;
+}
+.bloco-assin label { font-size: 13px; font-weight: 600; color: #52606d; }
+.canvas-assin {
+  width: 300px; max-width: 70vw; height: 140px; background-color: #ffffff;
+  border: 2px dashed #9aa5b1; border-radius: 8px; touch-action: none; cursor: crosshair; display: block;
+}
+.btn-limpar-assin {
+  background: none; border: 1px solid #cbd2d9; color: #52606d;
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; align-self: flex-start;
+}
+.btn-limpar-assin:hover { background-color: #eef1f4; }
+.cel-assin { color: #9a6700; font-size: 12px; font-style: italic; white-space: nowrap; }
+
+.acoes-inclusao { display: flex; gap: 10px; margin-top: 16px; }
+
+/* Botão "assinado ✓" no histórico */
+.btn-ver-assin {
+  background-color: #e3f4ea; color: #0b7a3b; border: 1px solid #b6e0c6;
+  padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.btn-ver-assin:hover { background-color: #d0ecda; }
