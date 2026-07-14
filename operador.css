@@ -101,6 +101,8 @@
 .resumo-peca strong { color: #1f2933; }
 
 .linha-inicio { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.linha-inicio .campo-hora { position: relative; }
+.linha-inicio .campo-hora small { position: absolute; top: 100%; left: 0; }
 .botao-iniciar-processo {
   background-color: #0b7a3b; color: #fff; border: none; border-radius: 8px;
   padding: 14px 22px; font-size: 15px; font-weight: 700; cursor: pointer; white-space: nowrap;
