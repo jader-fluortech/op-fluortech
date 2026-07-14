@@ -65,6 +65,8 @@ const DEF_FF = {
     nome: "FF-002 Tamboreamento",
     colunas: [
       { rot: "Data", campo: "data" },
+      { rot: "Cliente", fonte: "cliente" },
+      { rot: "Ordem de Produção", fonte: "numeroOp" },
       { rot: "Qtde Total", campo: "qtdeTotal" },
       { rot: "Qtde Parcial", campo: "qtdeParcial" },
       { rot: "Nº Máq.", campo: "maquina" },
