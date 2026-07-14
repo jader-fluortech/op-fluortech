@@ -287,7 +287,9 @@ function abrirRegistrosFF(codigoFf) {
   document.getElementById("modal-ff-titulo").textContent = def ? def.nome : codigoFf;
 
   let html = "";
-  if (def && def.abas) {
+  if (codigoFf === "ff008") {
+    html = montarFF008(todos);
+  } else if (def && def.abas) {
     // FF com múltiplas abas (ex: FF-004) — uma tabela por aba
     def.abas.forEach(function (aba) {
       const regsAba = todos.filter(function (r) { return (r.aba || "sinterizacao") === aba.chave; });
