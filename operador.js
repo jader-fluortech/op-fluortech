@@ -226,6 +226,13 @@ function montarApontamento(op) {
   return html;
 }
 
+function legendaData(dataISO) {
+  if (!dataISO) return "";
+  const p = String(dataISO).split("-");
+  if (p.length !== 3) return "";
+  return "<small style='display:block;color:#9aa5b1;font-size:0.78em;margin-top:2px;'>" + p[2] + "/" + p[1] + "/" + p[0] + "</small>";
+}
+
 function selectMotivos(id, lista, selecionado) {
   const idAttr = id ? " id='" + id + "'" : "";
   let s = "<select" + idAttr + "><option value=''>Selecionar…</option>";
