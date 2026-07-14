@@ -188,6 +188,21 @@ const DEF_FF = {
       { rot: "Peças Sujas", campo: "pecasSujas" }
     ]
   }
+,
+  ff032: {
+    nome: "FF-032 Controle de Numeração de Certificado",
+    colunas: [
+      { rot: "Certificado nº", campo: "certificadoNum" },
+      { rot: "Pedido Kanban", campo: "pedidoKanban" },
+      { rot: "OP", campo: "numeroOp" },
+      { rot: "Nº Fluortech", campo: "numeroFluortech" },
+      { rot: "Data Emissão", campo: "dataEmissao" },
+      { rot: "Código do Cliente", campo: "codigoCliente" },
+      { rot: "Cliente", campo: "cliente" },
+      { rot: "Inspetor(a)", campo: "inspetor" },
+      { rot: "Observações", campo: "observacoes" }
+    ]
+  }
 };
 
 const filtroNumero = document.getElementById("filtro-numero");
