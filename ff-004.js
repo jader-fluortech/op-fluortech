@@ -97,7 +97,7 @@ onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   resultado.forEach(function (documento) {
     const dados = documento.data();
     dados._id = documento.id;
-    if (dados.status !== "finalizada_arquivada") opsDisponiveis.push(dados);
+    if (dados.status !== "finalizada_arquivada" && opFoiIniciada(dados)) opsDisponiveis.push(dados);
   });
   opsDisponiveis.sort(function (a, b) {
     return String(a.numero || "").localeCompare(String(b.numero || ""));
