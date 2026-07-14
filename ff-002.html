@@ -22,8 +22,33 @@
       <button id="btn-novo-registro" class="botao-novo-registro">+ Incluir novo registro</button>
     </div>
 
-    <h2 class="ff-subtitulo">Registros dos últimos 30 dias</h2>
+    <!-- TABELA DE INCLUSÃO (aparece só ao incluir) -->
+    <div id="area-inclusao" style="display:none;">
+      <h2 class="ff-subtitulo">Novo registro</h2>
+      <div class="tabela-wrap">
+        <table class="tabela-ff">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Ordem de Produção</th>
+              <th>Qtde Total</th>
+              <th>Qtde Parcial</th>
+              <th>Nº Máq.</th>
+              <th>Horário Inicial</th>
+              <th>Horário Final</th>
+              <th>Responsável</th>
+              <th>Diário de Bordo</th>
+              <th class="col-acoes"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-inclusao"></tbody>
+        </table>
+      </div>
+    </div>
 
+    <!-- TABELA DE HISTÓRICO -->
+    <h2 class="ff-subtitulo">Registros dos últimos 30 dias</h2>
     <div class="tabela-wrap">
       <table class="tabela-ff">
         <thead>
@@ -38,7 +63,6 @@
             <th>Horário Final</th>
             <th>Responsável</th>
             <th>Diário de Bordo</th>
-            <th class="col-acoes"></th>
           </tr>
         </thead>
         <tbody id="corpo-tabela"></tbody>
