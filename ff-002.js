@@ -112,7 +112,7 @@ function abrirInclusao() {
   h += "<td><select id='n-op' class='in-mini'>" + opcoes + "</select></td>";
   h += "<td><input type='number' id='n-qtotal' class='in-mini' inputmode='numeric' min='0'></td>";
   h += "<td><input type='number' id='n-qparcial' class='in-mini' inputmode='numeric' min='0'></td>";
-  h += "<td><input type='text' id='n-maquina' class='in-mini' inputmode='numeric'></td>";
+  h += "<td><input type='text' id='n-maquina' class='in-mini'></td>";
   h += "<td><input type='time' id='n-hini' class='in-mini'></td>";
   h += "<td><input type='time' id='n-hfim' class='in-mini'></td>";
   h += "<td><input type='text' id='n-resp' class='in-mini' placeholder='Nome e sobrenome'></td>";
