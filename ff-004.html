@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF-004 — Autocontrole e Descanso na Sinterização</title>
+  <link rel="stylesheet" href="ff.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>FF-004 — Autocontrole e Descanso na Sinterização</h1>
+    <div class="cabecalho-direita">
+      <span class="ambiente" id="ambiente">ambiente de teste</span>
+    </div>
+  </header>
+
+  <main class="conteudo">
+
+    <div class="ff-topo">
+      <p id="status-conexao" class="status">Carregando registros…</p>
+      <button id="btn-novo-registro" class="botao-novo-registro">+ Incluir novo registro</button>
+    </div>
+
+    <!-- Seletor de abas -->
+    <div class="abas-ff">
+      <button class="aba-btn ativa" data-aba="sinterizacao">Sinterização</button>
+      <button class="aba-btn" data-aba="descanso">Descanso</button>
+    </div>
+
+    <!-- ABA SINTERIZAÇÃO -->
+    <section id="aba-sinterizacao" class="aba-conteudo">
+
+      <div id="area-inclusao-sint" class="area-inclusao-ff" style="display:none;">
+        <h2 class="ff-subtitulo">Novo registro — Sinterização</h2>
+        <div class="tabela-wrap">
+          <table class="tabela-ff">
+            <thead>
+              <tr>
+                <th>Data Entrada</th><th>Hora Entrada</th><th>Nº OP</th><th>Nº Bandeja</th>
+                <th>Sub-lote</th><th>Parede (mm)</th><th>Visto Moldagem</th>
+                <th>Hora Ent. Forno</th><th>Data Ent. Forno</th><th>Nº Forno</th>
+                <th>Hora Saída Forno</th><th>Data Saída Forno</th><th>Visto Controlador</th>
+                <th>ID Gráfico</th><th class="col-acoes"></th>
+              </tr>
+            </thead>
+            <tbody id="corpo-inclusao-sint"></tbody>
+          </table>
+        </div>
+        <div id="assinaturas-sint" class="area-assinaturas"></div>
+        <div class="acoes-inclusao">
+          <button id="btn-salvar-sint" class="btn-linha-salvar">Salvar registro</button>
+          <button id="btn-cancelar-sint" class="btn-linha-cancelar">Cancelar</button>
+        </div>
+      </div>
+
+      <h2 class="ff-subtitulo">Registros dos últimos 30 dias — Sinterização</h2>
+      <div class="tabela-wrap">
+        <table class="tabela-ff">
+          <thead>
+            <tr>
+              <th>Data Entrada</th><th>Hora Entrada</th><th>Nº OP</th><th>Nº Bandeja</th>
+              <th>Sub-lote</th><th>Parede (mm)</th><th>Visto Moldagem</th>
+              <th>Hora Ent. Forno</th><th>Data Ent. Forno</th><th>Nº Forno</th>
+              <th>Hora Saída Forno</th><th>Data Saída Forno</th><th>Visto Controlador</th>
+              <th>ID Gráfico</th>
+            </tr>
+          </thead>
+          <tbody id="corpo-tabela-sint"></tbody>
+        </table>
+      </div>
+      <p id="vazio-sint" class="vazio-tabela" style="display:none;">Nenhum registro nos últimos 30 dias.</p>
+
+    </section>
+
+    <!-- ABA DESCANSO -->
+    <section id="aba-descanso" class="aba-conteudo" style="display:none;">
+
+      <div id="area-inclusao-desc" class="area-inclusao-ff" style="display:none;">
+        <h2 class="ff-subtitulo">Novo registro — Descanso</h2>
+        <div class="tabela-wrap">
+          <table class="tabela-ff">
+            <thead>
+              <tr>
+                <th>Data Entrada</th><th>Hora Entrada</th><th>Nº OP</th><th>Nº Bandeja</th>
+                <th>Parede (mm)</th><th>Hora Saída</th><th>Data Saída</th>
+                <th>Visto Controlador</th><th class="col-acoes"></th>
+              </tr>
+            </thead>
+            <tbody id="corpo-inclusao-desc"></tbody>
+          </table>
+        </div>
+        <div id="assinaturas-desc" class="area-assinaturas"></div>
+        <div class="acoes-inclusao">
+          <button id="btn-salvar-desc" class="btn-linha-salvar">Salvar registro</button>
+          <button id="btn-cancelar-desc" class="btn-linha-cancelar">Cancelar</button>
+        </div>
+      </div>
+
+      <h2 class="ff-subtitulo">Registros dos últimos 30 dias — Descanso</h2>
+      <div class="tabela-wrap">
+        <table class="tabela-ff">
+          <thead>
+            <tr>
+              <th>Data Entrada</th><th>Hora Entrada</th><th>Nº OP</th><th>Nº Bandeja</th>
+              <th>Parede (mm)</th><th>Hora Saída</th><th>Data Saída</th><th>Visto Controlador</th>
+            </tr>
+          </thead>
+          <tbody id="corpo-tabela-desc"></tbody>
+        </table>
+      </div>
+      <p id="vazio-desc" class="vazio-tabela" style="display:none;">Nenhum registro nos últimos 30 dias.</p>
+
+    </section>
+
+  </main>
+
+  <!-- Modal para ver assinatura ampliada -->
+  <div id="modal-assinatura" class="modal-fundo" style="display:none;">
+    <div class="modal-caixa">
+      <div class="modal-registro-topo">
+        <h2 id="modal-assin-titulo">Assinatura</h2>
+        <button id="modal-assin-fechar" class="modal-fechar">×</button>
+      </div>
+      <div id="modal-assin-conteudo" style="text-align:center;"></div>
+    </div>
+  </div>
+
+  <footer class="rodape">
+    <small>Sistema interno de acompanhamento de Ordens de Produção</small>
+  </footer>
+
+  <script type="module" src="ff-004.js"></script>
+
+</body>
+</html>
