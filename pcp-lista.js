@@ -883,8 +883,8 @@ function montarEtapaResumo(etapa, indice, emCorrecao) {
   h += "</div>";
 
   h += "<div class='campos etapa-campos'>";
-  h += campoEditavel(indice, "horaInicio", "Hora início (apontada)", ap.horaInicio, "time", emCorrecao);
-  h += campoEditavel(indice, "horaFim", "Hora fim (apontada)", ap.horaFim, "time", emCorrecao);
+  h += campoEditavel(indice, "horaInicio", "Hora início (apontada)", ap.horaInicio, "time", emCorrecao, ap.horaInicioData);
+  h += campoEditavel(indice, "horaFim", "Hora fim (apontada)", ap.horaFim, "time", emCorrecao, ap.horaFimData);
   h += campoEditavel(indice, "qtdeProduzida", "Qtde produzida", ap.qtdeProduzida, "number", emCorrecao);
   h += campoEditavel(indice, "qtdePerda", "Perdas", ap.qtdePerda, "number", emCorrecao);
   h += campoLargo("Motivo da perda", ap.motivoPerda ? (ap.motivoPerda + " — " + (MOTIVOS_PERDA[ap.motivoPerda] || "")) : null);
@@ -894,7 +894,7 @@ function montarEtapaResumo(etapa, indice, emCorrecao) {
     h += "<div class='etapa-paradas'><span class='etapa-subtitulo'>Paradas</span>";
     ap.paradas.forEach(function (p, i) {
       const motivo = p.motivo ? (p.motivo + " — " + (MOTIVOS_PARADA[p.motivo] || "")) : "—";
-      h += "<div class='parada-resumo'>Parada " + (i + 1) + ": " + (p.inicio || "—") + " às " + (p.fim || "—") + " · " + motivo + "</div>";
+      h += "<div class='parada-resumo'>Parada " + (i + 1) + ": " + horaComData(p.inicio, p.inicioData) + " às " + horaComData(p.fim, p.fimData) + " · " + motivo + "</div>";
     });
     h += "</div>";
   }
@@ -916,8 +916,8 @@ function campo(rotulo, valor) {
 function campoLargo(rotulo, valor) {
   return "<div class='campo campo-largo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + (valor || "—") + "</span></div>";
 }
-function campoEditavel(etapaIdx, chave, rotulo, valor, tipo, emCorrecao) {
-  const mostrado = valor || "—";
+function campoEditavel(etapaIdx, chave, rotulo, valor, tipo, emCorrecao, dataApontada) {
+  const mostrado = (tipo === "time" && !emCorrecao) ? horaComData(valor, dataApontada) : (valor || "—");
   if (!emCorrecao) {
     return "<div class='campo'><span class='rotulo'>" + rotulo + "</span><span class='valor'>" + mostrado + "</span></div>";
   }
@@ -953,6 +953,12 @@ function etapaAtualDa(op) {
   return op.etapas[i] || op.etapas[0];
 }
 function textoData(iso) { return iso ? new Date(iso).getTime() : 0; }
+function horaComData(hora, dataISO) {
+  if (!hora) return "—";
+  if (!dataISO) return hora;
+  const p = String(dataISO).split("-");
+  return (p.length === 3) ? (p[2] + "/" + p[1] + "/" + p[0] + " " + hora) : hora;
+}
 function formatarDataHora(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
