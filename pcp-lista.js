@@ -169,6 +169,25 @@ const DEF_FF = {
       }
     ]
   }
+,
+  ff012: {
+    nome: "FF-012 Controle de Defeitos na Inspeção",
+    colunas: [
+      { rot: "OP", campo: "numeroOp" },
+      { rot: "Qtde Prog.", campo: "qtdeProgramada" },
+      { rot: "Cliente", campo: "cliente" },
+      { rot: "Data", campo: "data" },
+      { rot: "Hora", campo: "hora" },
+      { rot: "Operador", campo: "operador" },
+      { rot: "Contaminação", campo: "contaminacao" },
+      { rot: "Marcas e Arranhões", campo: "marcasArranhoes" },
+      { rot: "Trincas", campo: "trincas" },
+      { rot: "Deformações", campo: "deformacoes" },
+      { rot: "Rebarba / Cantos Vivos", campo: "rebarbaCantos" },
+      { rot: "Mistura", campo: "mistura" },
+      { rot: "Peças Sujas", campo: "pecasSujas" }
+    ]
+  }
 };
 
 const filtroNumero = document.getElementById("filtro-numero");
