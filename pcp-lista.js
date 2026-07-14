@@ -65,8 +65,6 @@ const DEF_FF = {
     nome: "FF-002 Tamboreamento",
     colunas: [
       { rot: "Data", campo: "data" },
-      { rot: "Cliente", fonte: "cliente" },
-      { rot: "Ordem de Produção", fonte: "numeroOp" },
       { rot: "Qtde Total", campo: "qtdeTotal" },
       { rot: "Qtde Parcial", campo: "qtdeParcial" },
       { rot: "Nº Máq.", campo: "maquina" },
@@ -74,6 +72,45 @@ const DEF_FF = {
       { rot: "Horário Final", campo: "horaFinal" },
       { rot: "Responsável", fonte: "responsavel" },
       { rot: "Diário de Bordo", campo: "observacoes" }
+    ]
+  },
+  ff004: {
+    nome: "FF-004 Sinterização",
+    abas: [
+      {
+        chave: "sinterizacao",
+        titulo: "Sinterização",
+        colunas: [
+          { rot: "Data Entrada", campo: "dataEntrada" },
+          { rot: "Hora Entrada", campo: "horaEntrada" },
+          { rot: "Nº OP", fonte: "numeroOp" },
+          { rot: "Nº Bandeja", campo: "bandeja" },
+          { rot: "Sub-lote", campo: "subLote" },
+          { rot: "Parede (mm)", campo: "parede" },
+          { rot: "Visto Moldagem", campo: "vistoMoldagem", tipo: "assinatura" },
+          { rot: "Hora Ent. Forno", campo: "horaEntradaForno" },
+          { rot: "Data Ent. Forno", campo: "dataEntradaForno" },
+          { rot: "Nº Forno", campo: "forno" },
+          { rot: "Hora Saída Forno", campo: "horaSaidaForno" },
+          { rot: "Data Saída Forno", campo: "dataSaidaForno" },
+          { rot: "Visto Controlador", campo: "vistoControlador", tipo: "assinatura" },
+          { rot: "ID Gráfico", campo: "idGrafico" }
+        ]
+      },
+      {
+        chave: "descanso",
+        titulo: "Descanso",
+        colunas: [
+          { rot: "Data Entrada", campo: "dataEntrada" },
+          { rot: "Hora Entrada", campo: "horaEntrada" },
+          { rot: "Nº OP", fonte: "numeroOp" },
+          { rot: "Nº Bandeja", campo: "bandeja" },
+          { rot: "Parede (mm)", campo: "parede" },
+          { rot: "Hora Saída", campo: "horaSaida" },
+          { rot: "Data Saída", campo: "dataSaida" },
+          { rot: "Visto Controlador", campo: "vistoControlador", tipo: "assinatura" }
+        ]
+      }
     ]
   }
 };
@@ -185,33 +222,98 @@ function prepararModalFF() {
 function fecharModalFF() { modalFF.style.display = "none"; }
 prepararModalFF();
 
-// Abre o pop-up com a tabela dos registros de uma FF (só desta OP)
+// Abre o pop-up com a(s) tabela(s) dos registros de uma FF (só desta OP)
 function abrirRegistrosFF(codigoFf) {
   const def = DEF_FF[codigoFf];
-  const registros = (opNoResumo.registrosFF || []).filter(function (r) { return r.ff === codigoFf; });
-  registros.sort(function (a, b) { return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime(); });
+  const todos = (opNoResumo.registrosFF || []).filter(function (r) { return r.ff === codigoFf; });
+  todos.sort(function (a, b) { return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime(); });
 
   document.getElementById("modal-ff-titulo").textContent = def ? def.nome : codigoFf;
 
+  let html = "";
+  if (def && def.abas) {
+    // FF com múltiplas abas (ex: FF-004) — uma tabela por aba
+    def.abas.forEach(function (aba) {
+      const regsAba = todos.filter(function (r) { return (r.aba || "sinterizacao") === aba.chave; });
+      html += "<h3 class='titulo-aba-ff'>" + aba.titulo + "</h3>";
+      html += montarTabelaFF(aba.colunas, regsAba);
+    });
+  } else {
+    // FF de tabela única (ex: FF-002)
+    html += montarTabelaFF(def ? def.colunas : [], todos);
+  }
+
+  document.getElementById("modal-ff-conteudo").innerHTML = html;
+
+  // liga os botões de assinatura ("assinado ✓")
+  document.getElementById("modal-ff-conteudo").querySelectorAll(".btn-ver-assin-pcp").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const idx = parseInt(btn.getAttribute("data-idx"), 10);
+      const campo = btn.getAttribute("data-campo");
+      const reg = todos[idx];
+      if (reg && reg.campos && reg.campos[campo]) {
+        abrirAssinaturaPcp(btn.getAttribute("data-rot"), reg.campos[campo]);
+      }
+    });
+  });
+
+  modalFF.style.display = "flex";
+}
+
+// Monta uma tabela de registros a partir de colunas + lista
+function montarTabelaFF(colunas, registros) {
   let html = "<div class='tabela-wrap-ff'><table class='tabela-ff-pcp'><thead><tr>";
-  (def ? def.colunas : []).forEach(function (col) { html += "<th>" + col.rot + "</th>"; });
+  colunas.forEach(function (col) { html += "<th>" + col.rot + "</th>"; });
   html += "</tr></thead><tbody>";
-  registros.forEach(function (r) {
+  if (registros.length === 0) {
+    html += "<tr><td colspan='" + colunas.length + "' class='texto-vazio'>Sem registros.</td></tr>";
+  }
+  registros.forEach(function (r, idx) {
     const c = r.campos || {};
     html += "<tr>";
-    (def ? def.colunas : []).forEach(function (col) {
-      let v;
-      if (col.fonte) v = r[col.fonte];
-      else v = c[col.campo];
-      const mostrado = (v === undefined || v === null || String(v).trim() === "") ? "—" : String(v);
-      const classe = col.campo === "observacoes" ? " class='col-diario'" : "";
-      html += "<td" + classe + ">" + mostrado + "</td>";
+    colunas.forEach(function (col) {
+      if (col.tipo === "assinatura") {
+        if (c[col.campo]) {
+          html += "<td><button class='btn-ver-assin-pcp' data-idx='" + idx + "' data-campo='" + col.campo + "' data-rot='" + col.rot + "'>assinado ✓</button></td>";
+        } else {
+          html += "<td>—</td>";
+        }
+      } else {
+        let v;
+        if (col.fonte) v = r[col.fonte];
+        else v = c[col.campo];
+        const mostrado = (v === undefined || v === null || String(v).trim() === "") ? "—" : String(v);
+        const classe = col.campo === "observacoes" ? " class='col-diario'" : "";
+        html += "<td" + classe + ">" + mostrado + "</td>";
+      }
     });
     html += "</tr>";
   });
   html += "</tbody></table></div>";
-  document.getElementById("modal-ff-conteudo").innerHTML = html;
-  modalFF.style.display = "flex";
+  return html;
+}
+
+// Pop-up para ver a assinatura ampliada (dentro do PCP)
+function abrirAssinaturaPcp(rotulo, dataUrl) {
+  let modal = document.getElementById("modal-assin-pcp");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modal-assin-pcp";
+    modal.className = "modal-fundo";
+    modal.innerHTML = "<div class='modal-caixa'><div class='modal-registro-topo'>" +
+      "<h2 id='assin-pcp-titulo'>Assinatura</h2>" +
+      "<button id='assin-pcp-fechar' class='modal-fechar'>×</button></div>" +
+      "<div id='assin-pcp-conteudo' style='text-align:center;'></div></div>";
+    document.body.appendChild(modal);
+    document.getElementById("assin-pcp-fechar").addEventListener("click", function () {
+      modal.style.display = "none";
+    });
+    modal.addEventListener("click", function (e) { if (e.target === modal) modal.style.display = "none"; });
+  }
+  document.getElementById("assin-pcp-titulo").textContent = rotulo || "Assinatura";
+  document.getElementById("assin-pcp-conteudo").innerHTML =
+    "<img src='" + dataUrl + "' alt='Assinatura' style='max-width:100%; border:1px solid #e1e5ea; border-radius:8px;'>";
+  modal.style.display = "flex";
 }
 
 // ---- Modal de documentos (OP já criada) ----
