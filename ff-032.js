@@ -170,7 +170,6 @@ async function salvarLinhaNova() {
   if (!dataEmissao) { alert("Informe a Data de Emissão."); return; }
   if (!codigoCliente) { alert("Informe o Código do Cliente."); return; }
   if (!inspetor) { alert("Informe o(a) Inspetor(a)."); return; }
-  if (!observacoes) { alert("Preencha as Observações."); return; }
 
   const btnSalvar = document.getElementById("n-salvar");
   btnSalvar.disabled = true;
