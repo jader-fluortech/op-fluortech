@@ -396,3 +396,10 @@ function dataHoje() {
   const h = new Date();
   return h.getFullYear() + "-" + String(h.getMonth() + 1).padStart(2, "0") + "-" + String(h.getDate()).padStart(2, "0");
 }
+function opFoiIniciada(op) {
+  if (!op.etapas) return false;
+  for (let i = 0; i < op.etapas.length; i++) {
+    if (op.etapas[i].horarioAbertura) return true;
+  }
+  return false;
+}
