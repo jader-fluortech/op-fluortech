@@ -318,6 +318,58 @@ function abrirRegistrosFF(codigoFf) {
   modalFF.style.display = "flex";
 }
 
+// Renderiza os registros da FF-008 como cartões (mesmo layout do operador)
+function montarFF008(regs) {
+  const CAR = {
+    ranhura: { titulo: "Ranhura", comEsp: true, itens: [
+      { chave: "qtd", rot: "Quantidade de Ranhuras" },
+      { chave: "largL1", rot: "Largura — Lado 1" },
+      { chave: "largL2", rot: "Largura — Lado 2" },
+      { chave: "profL1", rot: "Profundidade — Lado 1" },
+      { chave: "profL2", rot: "Profundidade — Lado 2" }
+    ] },
+    corte: { titulo: "Corte", comEsp: false, itens: [
+      { chave: "reto", rot: "Ângulo reto (90°)" },
+      { chave: "agudo", rot: "Ângulo agudo (menor que 90°)" },
+      { chave: "z", rot: "Corte forma Z" }
+    ] }
+  };
+  function txf(v) { return (v === undefined || v === null || String(v).trim() === "") ? "—" : String(v); }
+  function dataBRf(iso) { if (!iso) return "—"; const p = String(iso).split("-"); return (p.length === 3) ? (p[2] + "/" + p[1] + "/" + p[0]) : String(iso); }
+  function pil(v) {
+    if (v === "Aprovado") return "<span style='background:#e3f5ea;color:#0b7a3b;padding:2px 8px;border-radius:10px;font-size:12px;'>Aprovado</span>";
+    if (v === "Reprovado") return "<span style='background:#fdeaea;color:#b3261e;padding:2px 8px;border-radius:10px;font-size:12px;'>Reprovado</span>";
+    return "—";
+  }
+  let html = "";
+  ["ranhura", "corte"].forEach(function (abaKey) {
+    const def = CAR[abaKey];
+    const lista = regs.filter(function (r) { return (r.aba || "ranhura") === abaKey; });
+    html += "<h3 class='titulo-aba-ff'>" + def.titulo + "</h3>";
+    if (lista.length === 0) { html += "<p class='texto-vazio'>Sem registros.</p>"; return; }
+    lista.forEach(function (r) {
+      const c = r.campos || {};
+      html += "<div style='border:1px solid #e1e5ea;border-radius:10px;padding:12px 14px;margin-bottom:14px;background:#fff;'>";
+      html += "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;'><strong>OP " + txf(c.numeroOp || r.numeroOp) + "</strong><span>" + dataBRf(c.data) + "</span></div>";
+      html += "<div style='font-size:12px;color:#5f6b7a;margin:4px 0;'>Cliente: " + txf(c.cliente || r.cliente) + " · Desenho: " + txf(c.desenho) + "</div>";
+      html += "<table class='tabela-ff-pcp'><thead><tr><th>Característica</th>";
+      if (def.comEsp) html += "<th>Especificado</th>";
+      html += "<th>Encontrado</th><th>Laudo</th></tr></thead><tbody>";
+      def.itens.forEach(function (it) {
+        html += "<tr><td>" + it.rot + "</td>";
+        if (def.comEsp) html += "<td>" + txf(c[it.chave + "Esp"]) + "</td>";
+        html += "<td>" + txf(c[it.chave + "Enc"]) + "</td>";
+        html += "<td>" + pil(c[it.chave + "Laudo"]) + "</td></tr>";
+      });
+      html += "</tbody></table>";
+      html += "<div style='font-size:12px;color:#5f6b7a;margin:4px 0;'>Responsável: " + txf(c.responsavel) + " · Dispositivo: " + txf(c.dispositivo) + " · Instrumento: " + txf(c.instrumento) + " · Data: " + dataBRf(c.dataRodape) + "</div>";
+      if (c.diarioBordo && String(c.diarioBordo).trim()) html += "<div style='font-size:12px;color:#5f6b7a;margin:4px 0;'>Diário de bordo: " + txf(c.diarioBordo) + "</div>";
+      html += "</div>";
+    });
+  });
+  return html;
+}
+
 // Monta uma tabela de registros a partir de colunas + lista
 function montarTabelaFF(colunas, registros) {
   let html = "<div class='tabela-wrap-ff'><table class='tabela-ff-pcp'><thead><tr>";
