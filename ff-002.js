@@ -1,6 +1,6 @@
 // ==========================================================
 //  FF-002 — Controle de Peças no Tamboreamento
-//  Tabela com linha editável no topo (inclui novos registros na própria tela)
+//  Tabela de inclusão (topo, some após salvar) + tabela de histórico
 // ==========================================================
 
 import { db } from "./firebase.js";
@@ -10,19 +10,20 @@ import {
 
 const CODIGO_FF = "ff002";
 const NOME_FF = "Controle de Peças no Tamboreamento";
-const NUM_COLUNAS = 11; // total de colunas da tabela
 
 const statusConexao = document.getElementById("status-conexao");
 const btnNovoRegistro = document.getElementById("btn-novo-registro");
+const areaInclusao = document.getElementById("area-inclusao");
+const corpoInclusao = document.getElementById("corpo-inclusao");
 const corpoTabela = document.getElementById("corpo-tabela");
 const vazioRegistros = document.getElementById("vazio-registros");
 
-let opsDisponiveis = [];      // OPs não arquivadas, para o dropdown
-let registrosAtuais = [];     // registros dos últimos 30 dias
-let linhaNovaAberta = false;  // controla "só uma linha nova por vez"
+let opsDisponiveis = [];
+let registrosAtuais = [];
+let linhaNovaAberta = false;
 
 // ----------------------------------------------------------
-//  Carrega as OPs (para o dropdown) — todas menos arquivadas
+//  Carrega as OPs (dropdown) — todas menos arquivadas
 // ----------------------------------------------------------
 onSnapshot(collection(db, "ordens_producao"), function (resultado) {
   opsDisponiveis = [];
@@ -53,7 +54,7 @@ onSnapshot(collection(db, "registros_ff"), function (resultado) {
   registrosAtuais.sort(function (a, b) {
     return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime();
   });
-  desenharTabela();
+  desenharHistorico();
   statusConexao.textContent = "✅ Conectado. " + registrosAtuais.length + " registro(s) nos últimos 30 dias.";
 }, function (erro) {
   console.error("Erro ao carregar registros:", erro);
@@ -62,13 +63,16 @@ onSnapshot(collection(db, "registros_ff"), function (resultado) {
 });
 
 // ----------------------------------------------------------
-//  Desenha a tabela (linha nova no topo, se aberta, + registros)
+//  Histórico
 // ----------------------------------------------------------
-function desenharTabela() {
+function desenharHistorico() {
+  if (registrosAtuais.length === 0) {
+    corpoTabela.innerHTML = "";
+    vazioRegistros.style.display = "block";
+    return;
+  }
+  vazioRegistros.style.display = "none";
   let html = "";
-
-  if (linhaNovaAberta) html += montarLinhaNova();
-
   registrosAtuais.forEach(function (r) {
     const c = r.campos || {};
     html += "<tr>";
@@ -82,20 +86,21 @@ function desenharTabela() {
     html += "<td>" + tx(c.horaFinal) + "</td>";
     html += "<td>" + tx(r.responsavel) + "</td>";
     html += "<td class='col-diario'>" + tx(c.observacoes) + "</td>";
-    html += "<td class='col-acoes'></td>";
     html += "</tr>";
   });
-
   corpoTabela.innerHTML = html;
-
-  // Se há registros ou linha nova, esconde o "vazio"
-  const temConteudo = registrosAtuais.length > 0 || linhaNovaAberta;
-  vazioRegistros.style.display = temConteudo ? "none" : "block";
-
-  if (linhaNovaAberta) ligarLinhaNova();
 }
 
-function montarLinhaNova() {
+// ----------------------------------------------------------
+//  Inclusão (linha editável)
+// ----------------------------------------------------------
+btnNovoRegistro.addEventListener("click", function () {
+  if (linhaNovaAberta) return;
+  linhaNovaAberta = true;
+  abrirInclusao();
+});
+
+function abrirInclusao() {
   let opcoes = "<option value=''>Selecione…</option>";
   opsDisponiveis.forEach(function (op) {
     opcoes += "<option value='" + op._id + "'>OP " + tx(op.numero) + "</option>";
@@ -116,12 +121,11 @@ function montarLinhaNova() {
   h += "<button id='n-salvar' class='btn-linha-salvar'>Salvar</button>";
   h += "<button id='n-cancelar' class='btn-linha-cancelar'>Cancelar</button>";
   h += "</td></tr>";
-  return h;
-}
 
-function ligarLinhaNova() {
+  corpoInclusao.innerHTML = h;
+  areaInclusao.style.display = "block";
+
   const nData = document.getElementById("n-data");
-  // pré-preenche data com hoje
   if (nData && !nData.value) nData.value = new Date().toISOString().slice(0, 10);
 
   const nOp = document.getElementById("n-op");
@@ -131,27 +135,16 @@ function ligarLinhaNova() {
     nCliente.textContent = op ? tx(op.cliente) : "—";
   });
 
-  document.getElementById("n-cancelar").addEventListener("click", function () {
-    linhaNovaAberta = false;
-    desenharTabela();
-  });
+  document.getElementById("n-cancelar").addEventListener("click", fecharInclusao);
   document.getElementById("n-salvar").addEventListener("click", salvarLinhaNova);
 }
 
-// ----------------------------------------------------------
-//  Abrir a linha nova
-// ----------------------------------------------------------
-btnNovoRegistro.addEventListener("click", function () {
-  if (linhaNovaAberta) return; // só uma por vez
-  linhaNovaAberta = true;
-  desenharTabela();
-  const wrap = document.querySelector(".tabela-wrap");
-  if (wrap) wrap.scrollTop = 0;
-});
+function fecharInclusao() {
+  linhaNovaAberta = false;
+  corpoInclusao.innerHTML = "";
+  areaInclusao.style.display = "none";
+}
 
-// ----------------------------------------------------------
-//  Salvar a linha nova
-// ----------------------------------------------------------
 async function salvarLinhaNova() {
   const opId = document.getElementById("n-op").value;
   const op = opsDisponiveis.find(function (o) { return o._id === opId; });
@@ -190,7 +183,6 @@ async function salvarLinhaNova() {
 
   try {
     await addDoc(collection(db, "registros_ff"), registro);
-    // espelha na OP
     try {
       const refOp = doc(db, "ordens_producao", op._id);
       const snap = await getDoc(refOp);
@@ -205,8 +197,7 @@ async function salvarLinhaNova() {
     } catch (e2) {
       console.error("Registro salvo, mas falhou ao espelhar na OP:", e2);
     }
-    linhaNovaAberta = false;
-    // o onSnapshot vai redesenhar sozinho com o novo registro
+    fecharInclusao();
   } catch (erro) {
     console.error("Erro ao salvar registro:", erro);
     alert("Erro ao salvar: " + erro.message);
