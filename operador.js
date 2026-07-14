@@ -392,6 +392,7 @@ async function executarFinalizacao() {
     const atual = await getDoc(referencia);
     const dados = atual.data();
     const i = (dados.etapaAtual || 1) - 1;
+    carimbarDatas(apontamento, dados.etapas[i].apontamentos);
     dados.etapas[i].apontamentos = apontamento;
     dados.etapas[i].status = "concluida";
     dados.etapas[i].horarioFimEtapa = new Date().toISOString();
