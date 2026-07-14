@@ -58,6 +58,26 @@ const ROTULOS_LEGIVEIS = {
   qtdePerda: "Perdas"
 };
 
+// Definição das colunas de cada FF (para exibir a tabela no pop-up).
+// Ao adicionar uma nova FF, basta incluir a definição aqui.
+const DEF_FF = {
+  ff002: {
+    nome: "FF-002 Tamboreamento",
+    colunas: [
+      { rot: "Data", campo: "data" },
+      { rot: "Cliente", fonte: "cliente" },
+      { rot: "Ordem de Produção", fonte: "numeroOp" },
+      { rot: "Qtde Total", campo: "qtdeTotal" },
+      { rot: "Qtde Parcial", campo: "qtdeParcial" },
+      { rot: "Nº Máq.", campo: "maquina" },
+      { rot: "Horário Inicial", campo: "horaInicial" },
+      { rot: "Horário Final", campo: "horaFinal" },
+      { rot: "Responsável", fonte: "responsavel" },
+      { rot: "Diário de Bordo", campo: "observacoes" }
+    ]
+  }
+};
+
 const filtroNumero = document.getElementById("filtro-numero");
 const filtroLote = document.getElementById("filtro-lote");
 const filtroDataDe = document.getElementById("filtro-data-de");
@@ -146,6 +166,53 @@ function confirmar3(texto, aoSalvar, aoDescartar) {
 }
 function fecharModal3() { modal3.style.display = "none"; acao3Salvar = null; acao3Descartar = null; }
 prepararModal3();
+
+// ---- Modal de visualização de registros de FF (só leitura) ----
+let modalFF;
+function prepararModalFF() {
+  modalFF = document.createElement("div");
+  modalFF.className = "modal-fundo";
+  modalFF.style.display = "none";
+  modalFF.innerHTML =
+    "<div class='modal-caixa modal-ff-caixa'>" +
+    "<div class='modal-registro-topo'><h2 id='modal-ff-titulo'></h2>" +
+    "<button id='modal-ff-fechar' class='modal-fechar'>×</button></div>" +
+    "<div id='modal-ff-conteudo'></div></div>";
+  document.body.appendChild(modalFF);
+  document.getElementById("modal-ff-fechar").addEventListener("click", fecharModalFF);
+  modalFF.addEventListener("click", function (e) { if (e.target === modalFF) fecharModalFF(); });
+}
+function fecharModalFF() { modalFF.style.display = "none"; }
+prepararModalFF();
+
+// Abre o pop-up com a tabela dos registros de uma FF (só desta OP)
+function abrirRegistrosFF(codigoFf) {
+  const def = DEF_FF[codigoFf];
+  const registros = (opNoResumo.registrosFF || []).filter(function (r) { return r.ff === codigoFf; });
+  registros.sort(function (a, b) { return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime(); });
+
+  document.getElementById("modal-ff-titulo").textContent = def ? def.nome : codigoFf;
+
+  let html = "<div class='tabela-wrap-ff'><table class='tabela-ff-pcp'><thead><tr>";
+  (def ? def.colunas : []).forEach(function (col) { html += "<th>" + col.rot + "</th>"; });
+  html += "</tr></thead><tbody>";
+  registros.forEach(function (r) {
+    const c = r.campos || {};
+    html += "<tr>";
+    (def ? def.colunas : []).forEach(function (col) {
+      let v;
+      if (col.fonte) v = r[col.fonte];
+      else v = c[col.campo];
+      const mostrado = (v === undefined || v === null || String(v).trim() === "") ? "—" : String(v);
+      const classe = col.campo === "observacoes" ? " class='col-diario'" : "";
+      html += "<td" + classe + ">" + mostrado + "</td>";
+    });
+    html += "</tr>";
+  });
+  html += "</tbody></table></div>";
+  document.getElementById("modal-ff-conteudo").innerHTML = html;
+  modalFF.style.display = "flex";
+}
 
 // ---- Modal de documentos (OP já criada) ----
 function abrirModalDocs() {
@@ -354,6 +421,10 @@ function desenharResumo() {
 
   const btnDocs = document.getElementById("btn-docs");
   if (btnDocs) btnDocs.addEventListener("click", abrirModalDocs);
+
+  conteudoResumo.querySelectorAll(".botao-ff").forEach(function (btn) {
+    btn.addEventListener("click", function () { abrirRegistrosFF(btn.getAttribute("data-ff")); });
+  });
 
   if (modoCorrecao) ligarCamposEditaveis();
 }
@@ -639,6 +710,19 @@ function montarResumo(op, emCorrecao) {
     html += "<div class='cartao'><h3>Documentos</h3><div class='lista-docs-resumo'>";
     op.documentos.forEach(function (d) {
       html += "<a class='doc-link' href='" + d.url + "' target='_blank' rel='noopener'>📄 " + d.nome + "</a>";
+    });
+    html += "</div></div>";
+  }
+
+  // Registros de FF (um botão por FF que tem registro nesta OP)
+  if (op.registrosFF && op.registrosFF.length > 0) {
+    const contagem = {};
+    op.registrosFF.forEach(function (r) { contagem[r.ff] = (contagem[r.ff] || 0) + 1; });
+    html += "<div class='cartao'><h3>Registros de FF</h3><div class='botoes-ff'>";
+    Object.keys(contagem).forEach(function (codigo) {
+      const def = DEF_FF[codigo];
+      const nome = def ? def.nome : codigo;
+      html += "<button class='botao-ff' data-ff='" + codigo + "'>📋 " + nome + " (" + contagem[codigo] + ")</button>";
     });
     html += "</div></div>";
   }
