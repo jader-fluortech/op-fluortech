@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF-032 — Controle de Numeração de Certificado</title>
+  <link rel="stylesheet" href="ff.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>FF-032 — Controle de Numeração de Certificado</h1>
+    <div class="cabecalho-direita">
+      <span class="ambiente" id="ambiente">ambiente de teste</span>
+    </div>
+  </header>
+
+  <main class="conteudo">
+
+    <div class="ff-topo">
+      <p id="status-conexao" class="status">Carregando registros…</p>
+      <button id="btn-novo-registro" class="botao-novo-registro">+ Incluir novo registro</button>
+    </div>
+
+    <!-- TABELA DE INCLUSÃO (aparece só ao incluir) -->
+    <div id="area-inclusao" style="display:none;">
+      <h2 class="ff-subtitulo">Novo registro</h2>
+      <div class="tabela-wrap">
+        <table class="tabela-ff">
+          <thead>
+            <tr>
+              <th>Certificado nº</th>
+              <th>Pedido Kanban</th>
+              <th>Ordem de Produção nº</th>
+              <th>Nº Fluortech</th>
+              <th>Data Emissão</th>
+              <th>Código do Cliente</th>
+              <th>Cliente</th>
+              <th>Inspetor(a)</th>
+              <th>Observações</th>
+              <th class="col-acoes"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-inclusao"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABELA DE HISTÓRICO -->
+    <h2 class="ff-subtitulo">Registros dos últimos 30 dias</h2>
+    <div class="tabela-wrap">
+      <table class="tabela-ff">
+        <thead>
+          <tr>
+            <th>Certificado nº</th>
+            <th>Pedido Kanban</th>
+            <th>Ordem de Produção nº</th>
+            <th>Nº Fluortech</th>
+            <th>Data Emissão</th>
+            <th>Código do Cliente</th>
+            <th>Cliente</th>
+            <th>Inspetor(a)</th>
+            <th>Observações</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-tabela"></tbody>
+      </table>
+    </div>
+    <p id="vazio-registros" class="vazio-tabela" style="display:none;">Nenhum registro nos últimos 30 dias.</p>
+
+  </main>
+
+  <footer class="rodape">
+    <small>Sistema interno de acompanhamento de Ordens de Produção</small>
+  </footer>
+
+  <script type="module" src="ff-032.js"></script>
+
+</body>
+</html>
