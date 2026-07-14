@@ -112,6 +112,62 @@ const DEF_FF = {
         ]
       }
     ]
+  },
+  ff008: {
+    nome: "FF-008 Ranhura e Corte",
+    abas: [
+      {
+        chave: "ranhura",
+        titulo: "Ranhura",
+        colunas: [
+          { rot: "Data", campo: "data" },
+          { rot: "Nº OP", campo: "numeroOp" },
+          { rot: "Cliente", campo: "cliente" },
+          { rot: "Desenho", campo: "desenho" },
+          { rot: "Qtd Ranhuras — Esp.", campo: "qtdEsp" },
+          { rot: "Qtd Ranhuras — Enc.", campo: "qtdEnc" },
+          { rot: "Qtd Ranhuras — Laudo", campo: "qtdLaudo" },
+          { rot: "Largura L1 — Esp.", campo: "largL1Esp" },
+          { rot: "Largura L1 — Enc.", campo: "largL1Enc" },
+          { rot: "Largura L1 — Laudo", campo: "largL1Laudo" },
+          { rot: "Largura L2 — Esp.", campo: "largL2Esp" },
+          { rot: "Largura L2 — Enc.", campo: "largL2Enc" },
+          { rot: "Largura L2 — Laudo", campo: "largL2Laudo" },
+          { rot: "Prof. L1 — Esp.", campo: "profL1Esp" },
+          { rot: "Prof. L1 — Enc.", campo: "profL1Enc" },
+          { rot: "Prof. L1 — Laudo", campo: "profL1Laudo" },
+          { rot: "Prof. L2 — Esp.", campo: "profL2Esp" },
+          { rot: "Prof. L2 — Enc.", campo: "profL2Enc" },
+          { rot: "Prof. L2 — Laudo", campo: "profL2Laudo" },
+          { rot: "Responsável", campo: "responsavel" },
+          { rot: "Dispositivo", campo: "dispositivo" },
+          { rot: "Instrumento", campo: "instrumento" },
+          { rot: "Data (rodapé)", campo: "dataRodape" },
+          { rot: "Diário de Bordo", campo: "diarioBordo" }
+        ]
+      },
+      {
+        chave: "corte",
+        titulo: "Corte",
+        colunas: [
+          { rot: "Data", campo: "data" },
+          { rot: "Nº OP", campo: "numeroOp" },
+          { rot: "Cliente", campo: "cliente" },
+          { rot: "Desenho", campo: "desenho" },
+          { rot: "Ângulo reto — Enc.", campo: "retoEnc" },
+          { rot: "Ângulo reto — Laudo", campo: "retoLaudo" },
+          { rot: "Ângulo agudo — Enc.", campo: "agudoEnc" },
+          { rot: "Ângulo agudo — Laudo", campo: "agudoLaudo" },
+          { rot: "Forma Z — Enc.", campo: "zEnc" },
+          { rot: "Forma Z — Laudo", campo: "zLaudo" },
+          { rot: "Responsável", campo: "responsavel" },
+          { rot: "Dispositivo", campo: "dispositivo" },
+          { rot: "Instrumento", campo: "instrumento" },
+          { rot: "Data (rodapé)", campo: "dataRodape" },
+          { rot: "Diário de Bordo", campo: "diarioBordo" }
+        ]
+      }
+    ]
   }
 };
 
