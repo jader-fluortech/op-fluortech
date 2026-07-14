@@ -126,8 +126,13 @@ function abrirInclusao() {
   areaInclusao.style.display = "block";
 
   const nData = document.getElementById("n-data");
-  if (nData && !nData.value) nData.value = new Date().toISOString().slice(0, 10);
-
+  if (nData && !nData.value) {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    nData.value = ano + "-" + mes + "-" + dia;
+  }
   const nOp = document.getElementById("n-op");
   const nCliente = document.getElementById("n-cliente");
   nOp.addEventListener("change", function () {
