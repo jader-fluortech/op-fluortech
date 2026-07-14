@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF-012 — Controle de Defeitos Detectados na Inspeção</title>
+  <link rel="stylesheet" href="ff.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>FF-012 — Controle de Defeitos Detectados na Inspeção</h1>
+    <div class="cabecalho-direita">
+      <span class="ambiente" id="ambiente">ambiente de teste</span>
+    </div>
+  </header>
+
+  <main class="conteudo">
+
+    <div class="ff-topo">
+      <p id="status-conexao" class="status">Carregando registros…</p>
+      <button id="btn-novo-registro" class="botao-novo-registro">+ Incluir novo registro</button>
+    </div>
+
+    <!-- TABELA DE INCLUSÃO (aparece só ao incluir) -->
+    <div id="area-inclusao" style="display:none;">
+      <h2 class="ff-subtitulo">Novo registro</h2>
+      <div class="tabela-wrap">
+        <table class="tabela-ff">
+          <thead>
+            <tr>
+              <th>Ordem de Produção</th>
+              <th>Qtde Programada</th>
+              <th>Cliente</th>
+              <th>Data da Inspeção</th>
+              <th>Hora</th>
+              <th>Nome do operador</th>
+              <th>Contaminação</th>
+              <th>Marcas e Arranhões</th>
+              <th>Trincas</th>
+              <th>Deformações</th>
+              <th>Excesso de Rebarba / Cantos Vivos</th>
+              <th>Mistura</th>
+              <th>Peças Sujas</th>
+              <th class="col-acoes"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-inclusao"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABELA DE HISTÓRICO -->
+    <h2 class="ff-subtitulo">Registros dos últimos 30 dias</h2>
+    <div class="tabela-wrap">
+      <table class="tabela-ff">
+        <thead>
+          <tr>
+            <th>Ordem de Produção</th>
+            <th>Qtde Programada</th>
+            <th>Cliente</th>
+            <th>Data da Inspeção</th>
+            <th>Hora</th>
+            <th>Nome do operador</th>
+            <th>Contaminação</th>
+            <th>Marcas e Arranhões</th>
+            <th>Trincas</th>
+            <th>Deformações</th>
+            <th>Excesso de Rebarba / Cantos Vivos</th>
+            <th>Mistura</th>
+            <th>Peças Sujas</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-tabela"></tbody>
+      </table>
+    </div>
+    <p id="vazio-registros" class="vazio-tabela" style="display:none;">Nenhum registro nos últimos 30 dias.</p>
+
+  </main>
+
+  <footer class="rodape">
+    <small>Sistema interno de acompanhamento de Ordens de Produção</small>
+  </footer>
+
+  <script type="module" src="ff-012.js"></script>
+
+</body>
+</html>
